@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>权限不足 - Worklist</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
+        .box { padding: 40px; background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        h1 { color: #f56c6c; }
+        button { margin: 10px; padding: 10px 20px; border: none; border-radius: 20px; background: #3b82f6; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>403 - 权限不足</h1>
+        <p>你无权访问此页面，请检查你的登录身份。</p>
+        <button onclick="history.go(-2)">返回上一级</button>
+        <button onclick="window.location.href='/login'">重新登录</button>
+    </div>
+</body>
+</html>

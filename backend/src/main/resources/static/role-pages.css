@@ -1,0 +1,428 @@
+/* 统一的角色页面样式 */
+body {
+    font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+/* 左右布局：侧边栏 + 主内容 */
+.app-layout,
+.manager-shell {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: calc(100vh - 64px);
+}
+
+/* ========= 侧边栏 ========= */
+.sidebar,
+.manager-sidebar {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border-right: 1px solid #e9eef3;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header,
+.manager-brand {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid #eef2f6;
+}
+
+.sidebar-header h2,
+.manager-brand h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 6px;
+}
+
+.sidebar-header p,
+.manager-brand p {
+    color: #64748b;
+    line-height: 1.7;
+    font-size: 13px;
+    margin: 0;
+}
+
+.nav-menu,
+.manager-nav {
+    padding: 22px 12px 12px;
+    display: grid;
+    gap: 8px;
+}
+
+.nav-item,
+.manager-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    cursor: pointer;
+    color: #334155;
+    transition: all 0.18s ease;
+}
+
+.nav-item:hover,
+.manager-nav-item:hover {
+    background: #f8fafc;
+    color: #1d4ed8;
+}
+
+.nav-item.active,
+.manager-nav-item.active {
+    background: #eef2ff;
+    color: #2563eb;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.nav-icon,
+.manager-nav-icon {
+    width: 28px;
+    text-align: center;
+    font-size: 18px;
+}
+
+.sidebar-footer,
+.manager-footer {
+    margin-top: auto;
+    padding: 20px 24px 28px;
+    border-top: 1px solid #eef2f6;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+/* ========= 主内容区 ========= */
+.main-content,
+.manager-content {
+    background: #f8fafc;
+    padding: 24px 28px 32px;
+    overflow-y: auto;
+}
+
+.content-panel,
+.manager-panel {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+    min-height: calc(100vh - 64px - 56px);
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header,
+.manager-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid #eff3f8;
+}
+
+.panel-header h1,
+.manager-header h1 {
+    font-size: 1.65rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 6px;
+}
+
+.panel-header p,
+.manager-header p {
+    color: #64748b;
+    line-height: 1.7;
+    font-size: 13px;
+    margin: 0;
+}
+
+.task-list-container,
+.manager-body {
+    flex: 1;
+    padding: 24px 28px 28px;
+    overflow-y: auto;
+}
+
+/* ========= 工具栏 ========= */
+.task-toolbar,
+.role-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+/* ========= 表格样式 ========= */
+.el-table {
+    --el-table-header-text-color: #334155;
+}
+
+.task-card {
+    padding: 12px 16px;
+    border-radius: 16px;
+    border: none;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.14);
+}
+
+.task-card .task-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 6px;
+    color: #ffffff;
+}
+
+.task-card .task-desc {
+    font-size: 0.9rem;
+    color: #ffffff;
+}
+
+.remaining-time {
+    font-weight: 600;
+    font-size: 14px;
+    color: #0f766e;
+}
+
+.remaining-time.overdue {
+    color: #b91c1c;
+}
+
+/* ========= 按钮 ========= */
+.btn-primary {
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 40px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+/* ========= 设置页 ========= */
+.settings-placeholder {
+    padding: 48px 32px;
+    text-align: center;
+    color: #64748b;
+    background: #ffffff;
+    border-radius: 24px;
+}
+
+.settings-placeholder h3 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: #334155;
+    margin: 0 0 12px;
+}
+
+.settings-placeholder p {
+    margin: 0;
+}
+
+/* ========= 表单样式 ========= */
+.request-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.request-form-grid .full {
+    grid-column: 1 / -1;
+}
+
+.field-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #44546f;
+}
+
+.field-input,
+.field-textarea,
+.field-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    background: #ffffff;
+}
+
+.field-textarea {
+    min-height: 96px;
+    resize: vertical;
+}
+
+/* ========= 统计卡片 ========= */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.stat-card {
+    border-radius: 20px;
+    padding: 18px;
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+    border: 1px solid #dbeafe;
+    min-height: 120px;
+}
+
+.stat-card .label {
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.stat-card .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.stat-card .hint {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* ========= 卡片通用样式 ========= */
+.card,
+.placeholder-card,
+.settings-block {
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    padding: 18px;
+}
+
+.card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.card-meta {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.placeholder-card {
+    border-style: dashed;
+    background: #f8fafc;
+    color: #64748b;
+    line-height: 1.8;
+}
+
+.settings-block h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: #0f172a;
+}
+
+.settings-block p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.7;
+    font-size: 13px;
+}
+
+/* ========= 标签 ========= */
+.tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.tag {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    border: 1px solid #bfdbfe;
+}
+
+/* ========= 分配布局 ========= */
+.assign-layout {
+    display: grid;
+    grid-template-columns: 1.3fr 0.9fr;
+    gap: 18px;
+}
+
+.request-list,
+.worker-list,
+.settings-surface {
+    display: grid;
+    gap: 12px;
+}
+
+/* ========= 模式卡片 ========= */
+.mode-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.mode-card {
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    padding: 18px;
+    min-height: 144px;
+}
+
+.mode-card.active {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.08) inset;
+}
+
+.mode-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #0f172a;
+}
+
+.mode-card p {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+/* ========= 响应式设计 ========= */
+@media (max-width: 1100px) {
+    .stat-grid,
+    .mode-grid,
+    .assign-layout,
+    .request-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .app-layout,
+    .manager-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar,
+    .manager-sidebar {
+        border-right: none;
+        border-bottom: 1px solid #e9eef3;
+    }
+}

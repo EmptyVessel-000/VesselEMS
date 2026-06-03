@@ -1,0 +1,88 @@
+.global-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1100;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 0 24px;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid #e9eef3;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
+}
+
+.global-header .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #0f172a;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.global-header .brand-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    background: linear-gradient(135deg, #3b82f6, #22c55e);
+    font-size: 14px;
+}
+
+.global-header .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.global-header .nav-link,
+.global-header .account-box,
+.global-header .logout-btn,
+.global-header .login-btn {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid #dbe4ee;
+    background: #ffffff;
+    color: #334155;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.global-header .nav-link:hover,
+.global-header .logout-btn:hover,
+.global-header .login-btn:hover {
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.global-header .account-box {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+    gap: 8px;
+}
+
+.global-header .account-name {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.has-global-header {
+    padding-top: 64px;
+}
+
+body.has-global-header.auth-page {
+    padding-top: 64px;
+}
