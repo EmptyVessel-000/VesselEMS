@@ -6,30 +6,23 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import emptyvessel.worklist.dto.UserUpdateDto;
 import emptyvessel.worklist.model.User;
 import emptyvessel.worklist.repository.UserRepository;
+import emptyvessel.worklist.repository.UserRoleRepository;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository,
+                       UserRoleRepository userRoleRepository,
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.userRoleRepository = userRoleRepository;
         this.passwordEncoder = passwordEncoder;
-    }
-
-    // 核心身份权限校验逻辑（下沉至 Service 层）
-    public void verifyOwnership(Long targetUserId, String currentPrincipalEmail) {
-        User currentUser = userRepository.findByEmail(currentPrincipalEmail)
-                .orElseThrow(() -> new IllegalArgumentException("当前用户未登录"));
-
-        // 管理员级别角色可以访问所有，普通成员只能访问自己的 ID
-        if (currentUser.getRole() != User.Role.ROLE_MANAGER && !currentUser.getId().equals(targetUserId)) {
-            throw new org.springframework.security.access.AccessDeniedException("无权访问该资源");
-        }
     }
 
     public Optional<List<User>> listUsers() {
@@ -37,13 +30,14 @@ public class UserService {
     }
 
     public List<User> listMemberUsers() {
-        return userRepository.findAll().stream()
-                .filter(user -> user.getRole() == User.Role.ROLE_MEMBER)
+        return userRoleRepository.findByRoleId(findMemberRoleId()).stream()
+                .map(ur -> userRepository.findById(ur.getUserId()).orElse(null))
+                .filter(u -> u != null)
                 .toList();
     }
 
     public User createUser(User user) {
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
@@ -62,17 +56,24 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    public void updateUser(Long userId, UserUpdateDto dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
-        dto.apply(user);
-        userRepository.save(user);
-    }
-
     public void changePassword(Long userId, String newPassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    /** Whether the given user has the MANAGER role */
+    public boolean isManager(Long userId) {
+        return userRoleRepository.findByUserId(userId).stream()
+                .anyMatch(ur -> ur.getRoleId().equals(findManagerRoleId()));
+    }
+
+    private Long findMemberRoleId() {
+        return 2L; // ROLE_MEMBER = 2
+    }
+
+    private Long findManagerRoleId() {
+        return 3L; // ROLE_MANAGER = 3
     }
 }

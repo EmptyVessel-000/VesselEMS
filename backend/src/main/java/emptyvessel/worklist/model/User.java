@@ -4,135 +4,119 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "users")
+@Table(name = "user")
 public class User {
-    public enum Role {
-        ROLE_GUEST,
-        ROLE_MEMBER,
-        ROLE_MANAGER
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank
-    @Size(min = 3, max = 30)
-    @Column(name = "username", nullable = false, length = 30, unique = true)
+    @Column(name = "username", nullable = false, length = 64, unique = true)
     private String username;
 
     @NotBlank
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;
+
+    @Column(name = "nickname", length = 100)
+    private String nickname;
+
+    @Column(name = "real_name", length = 100)
+    private String realName;
+
+    @Column(name = "gender")
+    private Integer gender;
+
     @Email
-    @Column(name = "email", nullable = false, length = 100, unique = true)
+    @Column(name = "email", length = 128)
     private String email;
 
-    @Pattern(regexp = "^[\\d\\-+]{0,20}$")
-    @Column(name = "phone", length = 20)
-    private String phone;
+    @Column(name = "telephone", length = 32)
+    private String telephone;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 50)
-    private Role role;
+    @Column(name = "department_id")
+    private Long departmentId;
 
-    @Column(name = "password_hash", nullable = false, length = 60)
-    private String passwordHash;
+    @Column(name = "avatar", length = 512)
+    private String avatar;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "status")
+    private Integer status;
+
+    @Column(name = "remark", length = 255)
+    private String remark;
+
+    @Column(name = "last_login_ip", length = 64)
+    private String lastLoginIp;
+
+    @Column(name = "last_login_time")
+    private LocalDateTime lastLoginTime;
+
+    @Column(name = "create_time", nullable = false, updatable = false)
+    private LocalDateTime createTime;
+
+    @Column(name = "modify_time", nullable = false)
+    private LocalDateTime modifyTime;
 
     public User() {
     }
 
-    public User(Long id, String username, String email, String phone, Role role, String passwordHash) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.phone = phone;
-        this.role = role;
-        this.passwordHash = passwordHash;
-    }
+    // ========== Getters & Setters ==========
 
-    @PrePersist
-    @SuppressWarnings("unused")
-    private void ensureCreatedAt() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public User updateInfo(User newInfo) {
-        this.username = newInfo.getUsername();
-        this.email = newInfo.getEmail();
-        this.phone = newInfo.getPhone();
-        return this;
-    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getNickname() { return nickname; }
+    public void setNickname(String nickname) { this.nickname = nickname; }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getRealName() { return realName; }
+    public void setRealName(String realName) { this.realName = realName; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public Integer getGender() { return gender; }
+    public void setGender(Integer gender) { this.gender = gender; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public String getTelephone() { return telephone; }
+    public void setTelephone(String telephone) { this.telephone = telephone; }
 
-    public String getPhone() {
-        return phone;
-    }
+    public Long getDepartmentId() { return departmentId; }
+    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
 
-    public Role getRole() {
-        return role;
-    }
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
+    public String getRemark() { return remark; }
+    public void setRemark(String remark) { this.remark = remark; }
 
-    public String getPasswordHash() {
-        return passwordHash;
-    }
+    public String getLastLoginIp() { return lastLoginIp; }
+    public void setLastLoginIp(String lastLoginIp) { this.lastLoginIp = lastLoginIp; }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
+    public LocalDateTime getLastLoginTime() { return lastLoginTime; }
+    public void setLastLoginTime(LocalDateTime lastLoginTime) { this.lastLoginTime = lastLoginTime; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public LocalDateTime getCreateTime() { return createTime; }
+    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getModifyTime() { return modifyTime; }
+    public void setModifyTime(LocalDateTime modifyTime) { this.modifyTime = modifyTime; }
 }
