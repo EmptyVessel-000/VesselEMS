@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getToken } from '../stores/user.js'
+import request from '../api/request.js'
 
 const Login = () => import('../views/Login.vue')
 const Register = () => import('../views/Register.vue')
@@ -8,6 +10,10 @@ const Dashboard = () => import('../views/Dashboard.vue')
 const UserManage = () => import('../views/system/UserManage.vue')
 const RoleManage = () => import('../views/system/RoleManage.vue')
 const MenuManage = () => import('../views/system/MenuManage.vue')
+const DictManage = () => import('../views/system/DictManage.vue')
+const PermissionManage = () => import('../views/system/PermissionManage.vue')
+const DeptManage = () => import('../views/system/DeptManage.vue')
+const SystemConfig = () => import('../views/system/SystemConfig.vue')
 
 const DocumentManage = () => import('../views/rag/DocumentManage.vue')
 
@@ -37,6 +43,7 @@ const routes = [
     name: 'Main',
     component: Main,
     redirect: '/main/dashboard',
+    meta: { requiresAuth: true },
     children: [
       {
         path: 'dashboard',
@@ -62,6 +69,30 @@ const routes = [
         name: 'MenuManage',
         component: MenuManage,
         meta: { title: '菜单管理' }
+      },
+      {
+        path: 'system/dict',
+        name: 'DictManage',
+        component: DictManage,
+        meta: { title: '字典管理' }
+      },
+      {
+        path: 'system/permission',
+        name: 'PermissionManage',
+        component: PermissionManage,
+        meta: { title: '权限管理' }
+      },
+      {
+        path: 'system/dept',
+        name: 'DeptManage',
+        component: DeptManage,
+        meta: { title: '部门管理' }
+      },
+      {
+        path: 'system/config',
+        name: 'SystemConfig',
+        component: SystemConfig,
+        meta: { title: '系统配置' }
       },
       // RAG管理
       {
@@ -93,7 +124,8 @@ const router = createRouter({
   routes
 })
 
-// TODO: 接入后端后取消注释，启用认证守卫
+// 演示模式：跳过认证守卫
+// TODO: 接入后端后恢复下方认证逻辑
 // router.beforeEach(async (to, from, next) => { ... })
 
 export default router

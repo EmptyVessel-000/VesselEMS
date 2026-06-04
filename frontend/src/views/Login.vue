@@ -68,6 +68,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Message, Lock, Ship } from '@element-plus/icons-vue'
+import { loginUser } from '../stores/user.js'
 
 const router = useRouter()
 const formRef = ref(null)
@@ -99,10 +100,9 @@ async function handleLogin() {
 
   loading.value = true
 
-  // 模拟登录：延迟 800ms 模拟网络请求
+  // 演示模式：密码为 "123456" 模拟登录失败，其他密码模拟登录成功
   await new Promise(resolve => setTimeout(resolve, 800))
 
-  // 演示模式：密码为 "123456" 模拟登录失败，其他密码模拟登录成功
   if (formData.password === '123456') {
     ElMessage.error('登录失败：账号或密码错误')
     loading.value = false

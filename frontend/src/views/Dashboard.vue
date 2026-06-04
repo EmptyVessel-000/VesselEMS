@@ -2,7 +2,7 @@
   <div class="dashboard">
     <!-- 欢迎区 -->
     <div class="welcome-section">
-      <h2 class="welcome-title">欢迎回来，管理员</h2>
+      <h2 class="welcome-title">欢迎回来，{{ displayName }}</h2>
       <p class="welcome-subtitle">这是 VesselEMS 管理系统的总览页面</p>
     </div>
 
@@ -16,7 +16,7 @@
             </div>
             <div class="stat-info">
               <p class="stat-label">系统用户数</p>
-              <p class="stat-value">0</p>
+              <p class="stat-value">{{ stats.userCount }}</p>
             </div>
           </div>
         </el-card>
@@ -30,7 +30,7 @@
             </div>
             <div class="stat-info">
               <p class="stat-label">文档数量</p>
-              <p class="stat-value">0</p>
+              <p class="stat-value">{{ stats.taskCount }}</p>
             </div>
           </div>
         </el-card>
@@ -83,7 +83,29 @@
 </template>
 
 <script setup>
-import { UserFilled, Document, School, Collection, Setting, EditPen, User, List } from '@element-plus/icons-vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { UserFilled, Document, School, Collection } from '@element-plus/icons-vue'
+import { userStore } from '../stores/user.js'
+import request from '../api/request.js'
+
+const displayName = computed(() => userStore.user?.username || '管理员')
+
+const stats = reactive({
+  userCount: 0,
+  taskCount: 0
+})
+
+async function fetchStats() {
+  try {
+    const data = await request.get('/api/dashboard/stats')
+    if (data) {
+      stats.userCount = data.userCount || 0
+      stats.taskCount = data.taskCount || 0
+    }
+  } catch {
+    // 后端未启动时静默失败，保留默认值
+  }
+}
 
 const quickLinks = [
   { path: '/main/system/users', label: '用户管理', icon: 'UserFilled' },
@@ -91,6 +113,10 @@ const quickLinks = [
   { path: '/main/student/manage', label: '学生管理', icon: 'School' },
   { path: '/main/user/profile', label: '个人中心', icon: 'User' }
 ]
+
+onMounted(() => {
+  fetchStats()
+})
 </script>
 
 <style scoped>

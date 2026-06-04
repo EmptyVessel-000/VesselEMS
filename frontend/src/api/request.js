@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
+import router from '../router/index.js'
 
 const request = axios.create({
   baseURL: '',
@@ -6,11 +8,49 @@ const request = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
+// 请求拦截器：自动携带 JWT token
+request.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// 响应拦截器：统一处理 401 和业务错误
 request.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // 后端返回 ApiResponse<T> 格式 {code, message, data}
+    const body = response.data
+    if (body && typeof body === 'object' && 'code' in body) {
+      if (body.code === 200) {
+        return body.data !== undefined ? body.data : body
+      }
+      // 业务错误
+      ElMessage.error(body.message || '请求失败')
+      return Promise.reject(new Error(body.message || '请求失败'))
+    }
+    // 非标准 ApiResponse，直接返回原始数据
+    return response.data
+  },
   (error) => {
-    const message = error.response?.data?.message || error.message || '请求失败'
-    return Promise.reject(new Error(message))
+    if (error.response) {
+      const status = error.response.status
+      if (status === 401 || status === 403) {
+        localStorage.removeItem('token')
+        ElMessage.error('登录已过期，请重新登录')
+        router.push('/login')
+      } else {
+        const message = error.response.data?.message || error.message || '请求失败'
+        ElMessage.error(message)
+      }
+    } else {
+      ElMessage.error('网络错误，请检查网络连接')
+    }
+    return Promise.reject(error)
   }
 )
 
