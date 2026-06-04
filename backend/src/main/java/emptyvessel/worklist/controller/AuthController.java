@@ -1,9 +1,10 @@
 package emptyvessel.worklist.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,8 +15,11 @@ import emptyvessel.worklist.common.ApiResponse;
 import emptyvessel.worklist.dto.LoginDto;
 import emptyvessel.worklist.dto.RegisterDto;
 import emptyvessel.worklist.model.User;
+import emptyvessel.worklist.repository.RoleRepository;
+import emptyvessel.worklist.repository.UserRepository;
+import emptyvessel.worklist.repository.UserRoleRepository;
+import emptyvessel.worklist.security.JwtService;
 import emptyvessel.worklist.service.AuthService;
-import emptyvessel.worklist.service.UserService;
 import jakarta.validation.Valid;
 
 @RestController
@@ -23,14 +27,23 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
+    private final RoleRepository roleRepository;
     private final org.springframework.security.authentication.AuthenticationManager authenticationManager;
 
     public AuthController(AuthService authService,
-            UserService userService,
+            JwtService jwtService,
+            UserRepository userRepository,
+            UserRoleRepository userRoleRepository,
+            RoleRepository roleRepository,
             org.springframework.security.authentication.AuthenticationManager authenticationManager) {
         this.authService = authService;
-        this.userService = userService;
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.roleRepository = roleRepository;
         this.authenticationManager = authenticationManager;
     }
 
@@ -40,36 +53,41 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<String> login(@Valid @RequestBody LoginDto request,
-            jakarta.servlet.http.HttpServletRequest httpRequest,
-            jakarta.servlet.http.HttpServletResponse httpResponse) {
-        try {
-            UsernamePasswordAuthenticationToken authRequest = UsernamePasswordAuthenticationToken
-                    .unauthenticated(request.email(), request.password());
-            var authentication = authenticationManager.authenticate(authRequest);
+    public ApiResponse<java.util.Map<String, Object>> login(@Valid @RequestBody LoginDto request) {
+        Authentication auth = authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password()));
 
-            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-            securityContext.setAuthentication(authentication);
-            SecurityContextHolder.setContext(securityContext);
-            httpRequest.getSession(true).setAttribute(
-                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                    securityContext);
+        User user = userRepository.findByEmail(request.email()).orElseThrow();
+        String token = jwtService.generateToken(user.getId());
 
-            return ApiResponse.success("Login successful");
-        } catch (org.springframework.security.core.AuthenticationException e) {
-            return ApiResponse.error(401, "邮箱或密码错误");
-        }
+        List<String> roles = userRoleRepository.findByUserId(user.getId()).stream()
+                .map(ur -> roleRepository.findById(ur.getRoleId()).orElse(null))
+                .filter(r -> r != null)
+                .map(r -> r.getRoleName())
+                .collect(Collectors.toList());
+
+        return ApiResponse.success(java.util.Map.of(
+                "token", token,
+                "user", java.util.Map.of(
+                        "id", user.getId(),
+                        "username", user.getUsername(),
+                        "roles", roles)));
     }
 
     @GetMapping("/me")
-    public ApiResponse<java.util.Map<String, Object>> getCurrentUser(java.security.Principal principal) {
-        if (principal == null) {
-            return ApiResponse.error(401, "未登录");
-        }
-        var user = userService.getUserByEmail(principal.getName()).orElseThrow();
-        String roleName = user.getRole().name().replace("ROLE_", "").toLowerCase();
+    public ApiResponse<java.util.Map<String, Object>> getCurrentUser(Authentication auth) {
+        Long userId = (Long) auth.getPrincipal();
+        User user = userRepository.findById(userId).orElseThrow();
+
+        List<String> roles = userRoleRepository.findByUserId(userId).stream()
+                .map(ur -> roleRepository.findById(ur.getRoleId()).orElse(null))
+                .filter(r -> r != null)
+                .map(r -> r.getRoleName())
+                .collect(Collectors.toList());
+
         return ApiResponse.success(java.util.Map.of(
                 "id", user.getId(),
-                "role", roleName));
+                "username", user.getUsername(),
+                "roles", roles));
     }
 }

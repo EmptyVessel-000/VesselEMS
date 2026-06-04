@@ -2,6 +2,7 @@ package emptyvessel.worklist.controller;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -38,15 +39,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<User> getById(@PathVariable Long id, java.security.Principal principal) {
-        userService.verifyOwnership(id, principal.getName());
+    public ApiResponse<User> getById(@PathVariable Long id) {
         return ApiResponse.success(userService.getUserById(id).orElse(null));
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id, java.security.Principal principal) {
-        var user = userService.getUserByEmail(principal.getName()).orElseThrow();
-        if (user.getRole() != emptyvessel.worklist.model.User.Role.ROLE_MANAGER) {
+    public ApiResponse<Void> delete(@PathVariable Long id, Authentication auth) {
+        if (!userService.isManager((Long) auth.getPrincipal())) {
             throw new org.springframework.security.access.AccessDeniedException("无权操作");
         }
         if (userService.deleteUser(id)) {
@@ -56,17 +55,13 @@ public class UserController {
     }
 
     @PutMapping("/{id}/info")
-    public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request,
-            java.security.Principal principal) {
-        userService.verifyOwnership(id, principal.getName());
+    public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request) {
         userService.updateUser(id, request);
         return ApiResponse.success(null);
     }
 
     @PatchMapping("/{id}/password")
-    public ApiResponse<Void> changePassword(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request,
-            java.security.Principal principal) {
-        userService.verifyOwnership(id, principal.getName());
+    public ApiResponse<Void> changePassword(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request) {
         userService.changePassword(id, request.password());
         return ApiResponse.success(null);
     }

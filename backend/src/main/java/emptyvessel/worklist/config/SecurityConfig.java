@@ -7,52 +7,35 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import emptyvessel.worklist.security.JwtFilter;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+        private final JwtFilter jwtFilter;
+
+        public SecurityConfig(JwtFilter jwtFilter) {
+                this.jwtFilter = jwtFilter;
+        }
+
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-                http.csrf(AbstractHttpConfigurer::disable)
+                http.csrf(csrf -> csrf.disable())
                                 .sessionManagement(session -> session
-                                                .sessionCreationPolicy(
-                                                                org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED))
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(
-                                                "/",
-                                                "/index",
-                                                "/demo.html",
-                                                "/login",
-                                                "/register",
-                                                "/403.html",
-                                                "/**/*.js",
-                                                "/**/*.css",
-                                                "/**/*.png",
-                                                "/**/*.jpg",
-                                                "/**/*.jpeg",
-                                                "/**/*.gif",
-                                                "/**/*.svg",
-                                                "/**/*.ico",
-                                                "/api/auth/**")
-                                .permitAll()
-                                .requestMatchers("/manager.html").hasRole("MANAGER")
-                                .requestMatchers("/member.html").hasAnyRole("MEMBER", "MANAGER")
-                                .requestMatchers("/guest.html").hasAnyRole("GUEST", "MANAGER")
-                                .requestMatchers("/api/users/**").authenticated()
-                                .anyRequest().authenticated())
-                                .exceptionHandling(ex -> ex.accessDeniedPage("/403.html"))
-                                .formLogin(form -> form
-                                                .loginPage("/login")
-                                                .defaultSuccessUrl("/index", true)
-                                                .permitAll())
-                                .logout(logout -> logout
-                                                .logoutSuccessUrl("/login")
-                                                .permitAll());
+                                                .requestMatchers("/api/auth/**").permitAll()
+                                                .anyRequest().authenticated())
+                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
                 return http.build();
         }
 

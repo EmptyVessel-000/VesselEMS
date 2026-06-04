@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import emptyvessel.worklist.dto.UserUpdateDto;
 import emptyvessel.worklist.model.User;
 import emptyvessel.worklist.repository.UserRepository;
 import emptyvessel.worklist.repository.UserRoleRepository;
@@ -18,8 +19,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository,
-                       UserRoleRepository userRoleRepository,
-                       PasswordEncoder passwordEncoder) {
+            UserRoleRepository userRoleRepository,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userRoleRepository = userRoleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -54,6 +55,24 @@ public class UserService {
 
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    public void updateUser(Long id, UserUpdateDto dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("用户不存在: " + id));
+        if (dto.getNickname() != null)
+            user.setNickname(dto.getNickname());
+        if (dto.getRealName() != null)
+            user.setRealName(dto.getRealName());
+        if (dto.getGender() != null)
+            user.setGender(dto.getGender());
+        if (dto.getEmail() != null)
+            user.setEmail(dto.getEmail());
+        if (dto.getTelephone() != null)
+            user.setTelephone(dto.getTelephone());
+        if (dto.getDepartmentId() != null)
+            user.setDepartmentId(dto.getDepartmentId());
+        userRepository.save(user);
     }
 
     public void changePassword(Long userId, String newPassword) {
