@@ -1,0 +1,259 @@
+<template>
+  <el-container class="main-layout">
+    <!-- 侧边栏 -->
+    <el-aside :width="isCollapse ? '64px' : '220px'" class="main-aside">
+      <!-- Logo 区域 -->
+      <div class="aside-logo">
+        <el-icon :size="28"><Ship /></el-icon>
+        <span v-show="!isCollapse" class="logo-text">VesselEMS</span>
+      </div>
+
+      <!-- 菜单 -->
+      <el-menu
+        :default-active="activeMenu"
+        :collapse="isCollapse"
+        :collapse-transition="false"
+        router
+        background-color="#1e293b"
+        text-color="#cbd5e1"
+        active-text-color="#ffffff"
+        class="aside-menu"
+      >
+        <el-menu-item index="/main/dashboard">
+          <el-icon><DataBoard /></el-icon>
+          <template #title>仪表盘</template>
+        </el-menu-item>
+
+        <el-sub-menu index="system">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/main/system/users">用户管理</el-menu-item>
+          <el-menu-item index="/main/system/roles">角色管理</el-menu-item>
+          <el-menu-item index="/main/system/menus">菜单管理</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="rag">
+          <template #title>
+            <el-icon><Cpu /></el-icon>
+            <span>RAG管理</span>
+          </template>
+          <el-menu-item index="/main/rag/documents">文档管理</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="student">
+          <template #title>
+            <el-icon><School /></el-icon>
+            <span>学生中心</span>
+          </template>
+          <el-menu-item index="/main/student/manage">学生管理</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="user">
+          <template #title>
+            <el-icon><User /></el-icon>
+            <span>用户中心</span>
+          </template>
+          <el-menu-item index="/main/user/profile">用户个人中心</el-menu-item>
+        </el-sub-menu>
+      </el-menu>
+    </el-aside>
+
+    <!-- 右侧区域 -->
+    <el-container>
+      <!-- 顶部导航栏 -->
+      <el-header class="main-header">
+        <div class="header-left">
+          <el-icon
+            class="collapse-btn"
+            :size="22"
+            @click="isCollapse = !isCollapse"
+          >
+            <Fold v-if="!isCollapse" />
+            <Expand v-else />
+          </el-icon>
+
+          <el-breadcrumb separator="/">
+            <el-breadcrumb-item :to="{ path: '/main/dashboard' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item v-if="breadcrumbTitle">{{ breadcrumbTitle }}</el-breadcrumb-item>
+          </el-breadcrumb>
+        </div>
+
+        <div class="header-right">
+          <el-dropdown trigger="click">
+            <div class="user-avatar-area">
+              <el-avatar :size="32" :icon="UserFilled" />
+              <span class="user-name">管理员</span>
+              <el-icon class="arrow-icon"><ArrowDown /></el-icon>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="goProfile">
+                  <el-icon><User /></el-icon>
+                  个人信息
+                </el-dropdown-item>
+                <el-dropdown-item divided @click="handleLogout">
+                  <el-icon><SwitchButton /></el-icon>
+                  退出登录
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </el-header>
+
+      <!-- 内容区 -->
+      <el-main class="main-content">
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </el-main>
+    </el-container>
+  </el-container>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  Ship, DataBoard, Setting, Cpu, School, User, Fold, Expand,
+  UserFilled, ArrowDown, SwitchButton
+} from '@element-plus/icons-vue'
+
+const route = useRoute()
+const router = useRouter()
+const isCollapse = ref(false)
+
+// 当前激活菜单项
+const activeMenu = computed(() => route.path)
+
+// 面包屑标题
+const breadcrumbTitle = computed(() => {
+  return route.meta?.title || ''
+})
+
+// 跳转个人信息页
+function goProfile() {
+  router.push('/main/user/profile')
+}
+
+// 退出登录
+function handleLogout() {
+  router.push('/login')
+}
+</script>
+
+<style scoped>
+.main-layout {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ======== 侧边栏 ======== */
+.main-aside {
+  background: #1e293b;
+  transition: width 0.3s;
+  overflow: hidden;
+}
+
+.aside-logo {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #3b82f6;
+  border-bottom: 1px solid #334155;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.aside-menu {
+  border-right: none;
+}
+
+/* Element Plus 子菜单背景覆盖 */
+.aside-menu .el-sub-menu .el-menu {
+  background-color: #0f172a;
+}
+
+.aside-menu .el-menu-item:hover {
+  background-color: #334155;
+}
+
+.aside-menu .el-menu-item.is-active {
+  background-color: #2563eb;
+}
+
+/* ======== 顶部导航栏 ======== */
+.main-header {
+  height: 60px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.collapse-btn {
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+.collapse-btn:hover {
+  color: #2563eb;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.user-avatar-area:hover {
+  background: #f1f5f9;
+}
+
+.user-name {
+  font-size: 14px;
+  color: #374151;
+}
+
+.arrow-icon {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+/* ======== 内容区 ======== */
+.main-content {
+  background: #f1f5f9;
+  padding: 20px;
+  overflow-y: auto;
+}
+</style>
