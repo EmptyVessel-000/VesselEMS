@@ -5,11 +5,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import emptyvessel.worklist.model.PermissionRole;
 import emptyvessel.worklist.model.Role;
 import emptyvessel.worklist.model.RoleMenu;
-import emptyvessel.worklist.model.RolePermission;
+import emptyvessel.worklist.repository.PermissionRoleRepository;
 import emptyvessel.worklist.repository.RoleMenuRepository;
-import emptyvessel.worklist.repository.RolePermissionRepository;
 import emptyvessel.worklist.repository.RoleRepository;
 
 @Service
@@ -17,14 +17,14 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final RoleMenuRepository roleMenuRepository;
-    private final RolePermissionRepository rolePermissionRepository;
+    private final PermissionRoleRepository permissionRoleRepository;
 
     public RoleService(RoleRepository roleRepository,
-                       RoleMenuRepository roleMenuRepository,
-                       RolePermissionRepository rolePermissionRepository) {
+            RoleMenuRepository roleMenuRepository,
+            PermissionRoleRepository permissionRoleRepository) {
         this.roleRepository = roleRepository;
         this.roleMenuRepository = roleMenuRepository;
-        this.rolePermissionRepository = rolePermissionRepository;
+        this.permissionRoleRepository = permissionRoleRepository;
     }
 
     public List<Role> listRoles() {
@@ -52,9 +52,12 @@ public class RoleService {
             }
             role.setRoleName(updated.getRoleName());
         }
-        if (updated.getDescription() != null) role.setDescription(updated.getDescription());
-        if (updated.getSortOrder() != null) role.setSortOrder(updated.getSortOrder());
-        if (updated.getStatus() != null) role.setStatus(updated.getStatus());
+        if (updated.getDescription() != null)
+            role.setDescription(updated.getDescription());
+        if (updated.getSortOrder() != null)
+            role.setSortOrder(updated.getSortOrder());
+        if (updated.getStatus() != null)
+            role.setStatus(updated.getStatus());
         return roleRepository.save(role);
     }
 
@@ -80,16 +83,20 @@ public class RoleService {
     @Transactional
     public void assignPermissions(Long roleId, List<Long> permIds) {
         getRoleById(roleId);
-        rolePermissionRepository.findByRoleId(roleId).forEach(rp -> rolePermissionRepository.deleteById(rp.getId()));
+        permissionRoleRepository.findByRoleId(roleId).forEach(rp -> permissionRoleRepository.deleteById(rp.getId()));
         for (Long permId : permIds) {
-            RolePermission rp = new RolePermission();
+            PermissionRole rp = new PermissionRole();
             rp.setRoleId(roleId);
             rp.setPermissionId(permId);
-            rolePermissionRepository.save(rp);
+            permissionRoleRepository.save(rp);
         }
     }
 
     public List<RoleMenu> getRoleMenus(Long roleId) {
         return roleMenuRepository.findByRoleId(roleId);
+    }
+
+    public List<PermissionRole> getRolePermissions(Long roleId) {
+        return permissionRoleRepository.findByRoleId(roleId);
     }
 }

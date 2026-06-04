@@ -1,7 +1,5 @@
 package emptyvessel.worklist.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import emptyvessel.worklist.common.ApiResponse;
 import emptyvessel.worklist.dto.LoginDto;
 import emptyvessel.worklist.dto.RegisterDto;
 import emptyvessel.worklist.model.User;
@@ -36,17 +35,17 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody RegisterDto request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerUser(request));
+    public ApiResponse<User> register(@Valid @RequestBody RegisterDto request) {
+        return ApiResponse.success(authService.registerUser(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginDto request,
+    public ApiResponse<String> login(@Valid @RequestBody LoginDto request,
             jakarta.servlet.http.HttpServletRequest httpRequest,
             jakarta.servlet.http.HttpServletResponse httpResponse) {
         try {
-            UsernamePasswordAuthenticationToken authRequest =
-                    UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password());
+            UsernamePasswordAuthenticationToken authRequest = UsernamePasswordAuthenticationToken
+                    .unauthenticated(request.email(), request.password());
             var authentication = authenticationManager.authenticate(authRequest);
 
             SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
@@ -56,22 +55,20 @@ public class AuthController {
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     securityContext);
 
-            return ResponseEntity.ok("Login successful");
+            return ApiResponse.success("Login successful");
         } catch (org.springframework.security.core.AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("邮箱或密码错误");
+            return ApiResponse.error(401, "邮箱或密码错误");
         }
     }
 
     @GetMapping("/me")
-    public ResponseEntity<java.util.Map<String, Object>> getCurrentUser(java.security.Principal principal) {
+    public ApiResponse<java.util.Map<String, Object>> getCurrentUser(java.security.Principal principal) {
         if (principal == null) {
-            return ResponseEntity.status(401).build();
+            return ApiResponse.error(401, "未登录");
         }
-
         var user = userService.getUserByEmail(principal.getName()).orElseThrow();
         String roleName = user.getRole().name().replace("ROLE_", "").toLowerCase();
-
-        return ResponseEntity.ok(java.util.Map.of(
+        return ApiResponse.success(java.util.Map.of(
                 "id", user.getId(),
                 "role", roleName));
     }
