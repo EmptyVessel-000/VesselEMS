@@ -9,7 +9,7 @@
     <el-card class="table-card" shadow="never">
       <div class="toolbar"><div class="toolbar-left"><el-button type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button><el-button type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
       <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width:100%" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="50" align="center" />
+        <el-table-column type="selection" width="50" align="center" :selectable="(row) => row.roleName !== 'super_admin'" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="roleName" label="角色标识" min-width="150" />
         <el-table-column prop="description" label="角色描述" min-width="250" show-overflow-tooltip />
@@ -19,8 +19,8 @@
           <template #default="{ row }">
             <el-button type="success" size="small" :icon="Menu" link @click="handleAssignMenu(row)">分配菜单</el-button>
             <el-button type="warning" size="small" :icon="Key" link @click="handleAssignPerm(row)">分配权限</el-button>
-            <el-button type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
+            <el-button v-if="row.roleName !== 'super_admin'" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-if="row.roleName !== 'super_admin'" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -110,13 +110,55 @@ async function confirmBatchDelete() { batchLoading.value=true; try { for (const 
 const menuDialogVisible=ref(false), permDialogVisible=ref(false), currentRoleName=ref(''), currentRoleId=ref(null)
 const currentMenuKeys=ref([]), currentPermKeys=ref([]), menuTreeRef=ref(null), permTreeRef=ref(null)
 
-const menuTreeData = ref([{id:1,label:'仪表盘'},{id:2,label:'系统管理',children:[{id:21,label:'用户管理'},{id:22,label:'角色管理'},{id:23,label:'菜单管理'},{id:24,label:'权限管理'},{id:25,label:'部门管理'}]},{id:3,label:'RAG管理',children:[{id:31,label:'文档管理'}]},{id:5,label:'用户中心',children:[{id:51,label:'个人信息'}]}])
-const permTreeData = ref([{id:'p1',label:'用户管理',children:[{id:'p1-1',label:'user:view'},{id:'p1-2',label:'user:create'},{id:'p1-3',label:'user:update'},{id:'p1-4',label:'user:delete'}]},{id:'p2',label:'角色管理',children:[{id:'p2-1',label:'role:manage'}]},{id:'p3',label:'菜单管理',children:[{id:'p3-1',label:'menu:manage'}]},{id:'p4',label:'部门管理',children:[{id:'p4-1',label:'dept:view'}]},{id:'p5',label:'RAG管理',children:[{id:'p5-1',label:'doc:manage'}]}])
+const menuTreeData = ref([])
+const permTreeData = ref([])
 
-function handleAssignMenu(row) { currentRoleName.value=row.roleName; currentRoleId.value=row.id; currentMenuKeys.value=row.roleName==='super_admin'?[1,2,21,22,23,24,25,3,31,5,51]:[1,5,51]; menuDialogVisible.value=true }
-function handleMenuSave() { ElMessage.success(`菜单分配成功，共 ${menuTreeRef.value.getCheckedKeys().length} 项`); menuDialogVisible.value=false }
-function handleAssignPerm(row) { currentRoleName.value=row.roleName; currentRoleId.value=row.id; currentPermKeys.value=row.roleName==='super_admin'?['p1-1','p1-2','p1-3','p1-4','p2-1','p3-1','p4-1','p5-1']:['p1-1']; permDialogVisible.value=true }
-function handlePermSave() { ElMessage.success(`权限分配成功，共 ${permTreeRef.value.getCheckedKeys().length} 项`); permDialogVisible.value=false }
+function buildTree(list) {
+  const map = {}, roots = []
+  list.forEach(item => { item.children = []; map[item.id] = item })
+  list.forEach(item => { if (item.parentId && map[item.parentId]) map[item.parentId].children.push(item); else roots.push(item) })
+  return roots
+}
+
+async function handleAssignMenu(row) {
+  currentRoleName.value = row.roleName; currentRoleId.value = row.id
+  try {
+    const menuList = await request.get('/api/menus')
+    menuTreeData.value = buildTree((menuList || []).map(m => ({ id: m.id, label: m.menuName, parentId: m.parentId })))
+    const assigned = await request.get(`/api/roles/${row.id}/menus`)
+    currentMenuKeys.value = (assigned || []).map(rm => rm.menuId)
+  } catch { menuTreeData.value = []; currentMenuKeys.value = [] }
+  menuDialogVisible.value = true
+}
+
+async function handleMenuSave() {
+  try {
+    const checkedIds = menuTreeRef.value.getCheckedKeys()
+    await request.post(`/api/roles/${currentRoleId.value}/menus`, checkedIds)
+    ElMessage.success(`菜单分配成功，共 ${checkedIds.length} 项`)
+  } catch { ElMessage.error('菜单分配失败') }
+  menuDialogVisible.value = false
+}
+
+async function handleAssignPerm(row) {
+  currentRoleName.value = row.roleName; currentRoleId.value = row.id
+  try {
+    const permList = await request.get('/api/permissions')
+    permTreeData.value = (permList || []).map(p => ({ id: p.id, label: p.permissionCode }))
+    const assigned = await request.get(`/api/roles/${row.id}/permissions`)
+    currentPermKeys.value = (assigned || []).map(rp => rp.permissionId)
+  } catch { permTreeData.value = []; currentPermKeys.value = [] }
+  permDialogVisible.value = true
+}
+
+async function handlePermSave() {
+  try {
+    const checkedIds = permTreeRef.value.getCheckedKeys()
+    await request.post(`/api/roles/${currentRoleId.value}/permissions`, checkedIds)
+    ElMessage.success(`权限分配成功，共 ${checkedIds.length} 项`)
+  } catch { ElMessage.error('权限分配失败') }
+  permDialogVisible.value = false
+}
 
 onMounted(() => { fetchRoles() })
 </script>

@@ -17,7 +17,7 @@
         </div>
       </div>
       <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width: 100%" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="50" align="center" />
+        <el-table-column type="selection" width="50" align="center" :selectable="(row) => row.roleName !== '超级管理员'" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="username" label="用户名" width="110" />
         <el-table-column prop="nickname" label="昵称" width="100" />
@@ -27,14 +27,14 @@
         </el-table-column>
         <el-table-column prop="status" label="状态" width="75" align="center">
           <template #default="{ row }">
-            <el-switch v-model="row.status" :active-value="1" :inactive-value="0" @change="handleStatusToggle(row)" />
+            <el-switch v-model="row.status" :active-value="1" :inactive-value="0" :disabled="row.roleName === '超级管理员'" @change="handleStatusToggle(row)" />
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="160" />
         <el-table-column label="操作" width="150" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm title="确定删除该用户吗？" @confirm="handleDelete(row)">
+            <el-button v-if="!row.roleName || row.roleName !== '超级管理员'" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-if="!row.roleName || row.roleName !== '超级管理员'" title="确定删除该用户吗？" @confirm="handleDelete(row)">
               <template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template>
             </el-popconfirm>
           </template>
@@ -77,7 +77,7 @@ const roleOptions = ref([])
 const allUsers = ref([])
 const tableLoading = ref(false)
 
-async function fetchRoles() { try { const d = await request.get('/api/roles'); roleOptions.value = (d || []).map(r => ({ id: r.id, role_name: r.role_name || r.name || '' })) } catch {} }
+async function fetchRoles() { try { const d = await request.get('/api/roles'); roleOptions.value = (d || []).filter(r => (r.roleName || r.name) !== 'super_admin').map(r => ({ id: r.id, role_name: r.roleName || r.name || '' })) } catch {} }
 
 async function fetchUsers() {
   tableLoading.value = true
@@ -86,7 +86,7 @@ async function fetchUsers() {
     allUsers.value = (data || []).map(u => ({
       id: u.id, username: u.username || '', nickname: u.nickname || '', email: u.email || '',
       roleIds: u.roles ? u.roles.map(r => r.id || r) : (u.roleIds || []),
-      roleName: u.roles && u.roles.length ? u.roles[0].role_name || u.roles[0].name || '' : '',
+      roleName: roleOptions.value.find(r => r.id === (u.roleIds || [])[0])?.role_name || '',
       status: u.enabled !== false ? 1 : 0, telephone: u.telephone || '',
       createTime: u.createdAt ? new Date(u.createdAt).toLocaleString('zh-CN', { hour12: false }) : (u.createTime || ''),
       _raw: u
@@ -104,13 +104,13 @@ const currentPage = ref(1), pageSize = ref(10)
 const pagedData = computed(() => { const s = (currentPage.value - 1) * pageSize.value; return filteredData.value.slice(s, s + pageSize.value) })
 function handleSizeChange() { currentPage.value = 1 }
 
-const selectedIds = ref([])
-function handleSelectionChange(rows) { selectedIds.value = rows.map(r => r.id) }
-
 async function handleStatusToggle(row) {
   try { await request.put(`/api/users/${row.id}`, { username: row.username, email: row.email, enabled: row.status === 1 }); ElMessage.success(`用户「${row.username}」已${row.status === 1 ? '启用' : '禁用'}`) }
   catch { row.status = row.status === 1 ? 0 : 1; ElMessage.error('状态更新失败') }
 }
+
+const selectedIds = ref([])
+function handleSelectionChange(rows) { selectedIds.value = rows.map(r => r.id) }
 
 const dialogVisible = ref(false), isEdit = ref(false), editId = ref(null), submitLoading = ref(false), formRef = ref(null)
 const formData = reactive({ username: '', password: '', email: '', roleIds: [], status: 1 })
@@ -133,7 +133,7 @@ async function handleSubmit() {
   try {
     const payload = { username: formData.username, email: formData.email, roles: formData.roleIds, enabled: formData.status === 1 }
     if (formData.password) payload.password = formData.password
-    if (isEdit.value) { await request.put(`/api/users/${editId.value}`, payload); ElMessage.success('用户信息修改成功') }
+    if (isEdit.value) { await request.put(`/api/users/${editId.value}/info`, payload); ElMessage.success('用户信息修改成功') }
     else { await request.post('/api/users', payload); ElMessage.success('用户创建成功') }
     dialogVisible.value = false; resetForm(); await fetchUsers()
   } catch {} finally { submitLoading.value = false }
@@ -150,7 +150,7 @@ async function confirmBatchDelete() {
   finally { batchLoading.value = false }
 }
 
-onMounted(() => { fetchRoles(); fetchUsers() })
+onMounted(async () => { await fetchRoles(); await fetchUsers() })
 </script>
 
 <style scoped>

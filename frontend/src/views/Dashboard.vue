@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { reactive, computed, onMounted } from 'vue'
 import { UserFilled, Document, School, Collection } from '@element-plus/icons-vue'
 import { userStore } from '../stores/user.js'
 import request from '../api/request.js'

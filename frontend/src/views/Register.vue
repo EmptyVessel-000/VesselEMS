@@ -21,12 +21,6 @@
           <el-form-item prop="confirmPassword">
             <el-input v-model="formData.confirmPassword" type="password" placeholder="请再次输入密码" :prefix-icon="Lock" size="large" show-password />
           </el-form-item>
-          <el-form-item prop="roleName">
-            <el-select v-model="formData.roleName" placeholder="请选择角色" size="large" style="width:100%">
-              <el-option label="普通用户" value="user" />
-              <el-option label="管理员" value="admin" />
-            </el-select>
-          </el-form-item>
           <el-form-item>
             <el-button type="primary" size="large" class="register-btn" :loading="loading" @click="handleRegister">注 册</el-button>
           </el-form-item>
@@ -60,7 +54,6 @@ const formRules = {
   email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, message: '密码不少于6位', trigger: 'blur' }],
   confirmPassword: [{ required: true, validator: validateConfirm, trigger: 'blur' }],
-  roleName: [{ required: true, message: '请选择角色', trigger: 'change' }]
 }
 
 async function handleRegister() {
@@ -72,7 +65,7 @@ async function handleRegister() {
       username: formData.username,
       email: formData.email,
       password: formData.password,
-      roleName: formData.roleName
+      roleName: 'user'
     })
     ElMessage.success('注册成功，请登录')
     router.push('/login')

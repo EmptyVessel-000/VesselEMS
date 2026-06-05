@@ -1,5 +1,7 @@
 package vesselems.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +38,8 @@ public class AuthService {
         User user = new User();
         dto.apply(user);
         user.setPassword(passwordEncoder.encode(dto.password()));
+        user.setCreateTime(LocalDateTime.now());
+        user.setModifyTime(LocalDateTime.now());
         user.setStatus(1);
         user = userRepository.save(user);
 
