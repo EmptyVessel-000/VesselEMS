@@ -8,10 +8,10 @@
         <version>4.0.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>emptyvessel</groupId>
-    <artifactId>worklist</artifactId>
+    <groupId>VesselEMS</groupId>
+    <artifactId>EmptyVessel</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>worklist</name>
+    <name>VesselEMS</name>
     <description/>
     <url/>
     <licenses>

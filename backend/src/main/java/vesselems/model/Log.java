@@ -40,11 +40,11 @@ public class Log {
     private String methodName;
 
     @Lob
-    @Column(name = "request_params", columnDefinition = "LONGTEXT")
+    @Column(name = "request_params", columnDefinition = "TEXT")
     private String requestParams;
 
     @Lob
-    @Column(name = "response_data", columnDefinition = "LONGTEXT")
+    @Column(name = "response_data", columnDefinition = "TEXT")
     private String responseData;
 
     @Column(name = "ip", length = 64)
