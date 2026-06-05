@@ -8,7 +8,7 @@
         <span v-show="!isCollapse" class="logo-text">VesselEMS</span>
       </div>
 
-      <!-- 菜单 -->
+      <!-- 菜单（可滚动） -->
       <el-menu
         :default-active="activeMenu"
         :collapse="isCollapse"
@@ -32,6 +32,10 @@
           <el-menu-item index="/main/system/users">用户管理</el-menu-item>
           <el-menu-item index="/main/system/roles">角色管理</el-menu-item>
           <el-menu-item index="/main/system/menus">菜单管理</el-menu-item>
+          <el-menu-item index="/main/system/dict">字典管理</el-menu-item>
+          <el-menu-item index="/main/system/permission">权限管理</el-menu-item>
+          <el-menu-item index="/main/system/dept">部门管理</el-menu-item>
+          <el-menu-item index="/main/system/config">系统配置</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="rag">
@@ -40,14 +44,6 @@
             <span>RAG管理</span>
           </template>
           <el-menu-item index="/main/rag/documents">文档管理</el-menu-item>
-        </el-sub-menu>
-
-        <el-sub-menu index="student">
-          <template #title>
-            <el-icon><School /></el-icon>
-            <span>学生中心</span>
-          </template>
-          <el-menu-item index="/main/student/manage">学生管理</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="user">
@@ -81,10 +77,10 @@
         </div>
 
         <div class="header-right">
-          <el-dropdown trigger="click">
+          <el-dropdown trigger="hover">
             <div class="user-avatar-area">
               <el-avatar :size="32" :icon="UserFilled" />
-              <span class="user-name">管理员</span>
+              <span class="user-name">{{ displayName }}</span>
               <el-icon class="arrow-icon"><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
@@ -122,6 +118,7 @@ import {
   Ship, DataBoard, Setting, Cpu, School, User, Fold, Expand,
   UserFilled, ArrowDown, SwitchButton
 } from '@element-plus/icons-vue'
+import { userStore, logout } from '../stores/user.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -135,6 +132,11 @@ const breadcrumbTitle = computed(() => {
   return route.meta?.title || ''
 })
 
+// 当前用户名
+const displayName = computed(() => {
+  return userStore.user?.username || '管理员'
+})
+
 // 跳转个人信息页
 function goProfile() {
   router.push('/main/user/profile')
@@ -142,6 +144,7 @@ function goProfile() {
 
 // 退出登录
 function handleLogout() {
+  logout()
   router.push('/login')
 }
 </script>
@@ -156,6 +159,8 @@ function handleLogout() {
 .main-aside {
   background: #1e293b;
   transition: width 0.3s;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -167,6 +172,7 @@ function handleLogout() {
   gap: 8px;
   color: #3b82f6;
   border-bottom: 1px solid #334155;
+  flex-shrink: 0;
 }
 
 .logo-text {
@@ -179,6 +185,9 @@ function handleLogout() {
 
 .aside-menu {
   border-right: none;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Element Plus 子菜单背景覆盖 */
