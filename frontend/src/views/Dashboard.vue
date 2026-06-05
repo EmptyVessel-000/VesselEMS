@@ -88,7 +88,7 @@ import { UserFilled, Document, School, Collection } from '@element-plus/icons-vu
 import { userStore } from '../stores/user.js'
 import request from '../api/request.js'
 
-const displayName = computed(() => userStore.user?.username || '管理员')
+const displayName = computed(() => userStore.user?.username || '')
 
 const stats = reactive({
   userCount: 0,
@@ -110,7 +110,6 @@ async function fetchStats() {
 const quickLinks = [
   { path: '/main/system/users', label: '用户管理', icon: 'UserFilled' },
   { path: '/main/rag/documents', label: '文档管理', icon: 'Document' },
-  { path: '/main/student/manage', label: '学生管理', icon: 'School' },
   { path: '/main/user/profile', label: '个人中心', icon: 'User' }
 ]
 

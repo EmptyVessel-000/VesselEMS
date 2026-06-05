@@ -115,7 +115,7 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  Ship, DataBoard, Setting, Cpu, School, User, Fold, Expand,
+  Ship, DataBoard, Setting, Cpu, User, Fold, Expand,
   UserFilled, ArrowDown, SwitchButton
 } from '@element-plus/icons-vue'
 import { userStore, logout } from '../stores/user.js'
@@ -134,7 +134,7 @@ const breadcrumbTitle = computed(() => {
 
 // 当前用户名
 const displayName = computed(() => {
-  return userStore.user?.username || '管理员'
+  return userStore.user?.username || ''
 })
 
 // 跳转个人信息页
