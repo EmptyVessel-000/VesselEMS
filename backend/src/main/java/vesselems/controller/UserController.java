@@ -7,16 +7,19 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import vesselems.common.ApiResponse;
+import vesselems.dto.CreateUserDto;
+import vesselems.dto.UserResponseDto;
 import vesselems.dto.UserUpdateDto;
 import vesselems.model.User;
 import vesselems.service.UserService;
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,8 +32,8 @@ public class UserController {
     }
 
     @GetMapping
-    public ApiResponse<List<User>> listUsers() {
-        return ApiResponse.success(userService.listUsers().orElse(null));
+    public ApiResponse<List<UserResponseDto>> listUsers() {
+        return ApiResponse.success(userService.listUsersWithRoles());
     }
 
     @GetMapping("/members")
@@ -41,6 +44,11 @@ public class UserController {
     @GetMapping("/{id}")
     public ApiResponse<User> getById(@PathVariable Long id) {
         return ApiResponse.success(userService.getUserById(id).orElse(null));
+    }
+
+    @PostMapping
+    public ApiResponse<User> create(@Valid @RequestBody CreateUserDto request) {
+        return ApiResponse.success(userService.createUser(request));
     }
 
     @DeleteMapping("/{id}")
@@ -62,7 +70,7 @@ public class UserController {
 
     @PatchMapping("/{id}/password")
     public ApiResponse<Void> changePassword(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request) {
-        userService.changePassword(id, request.password());
+        userService.changePassword(id, request.getPassword());
         return ApiResponse.success(null);
     }
 }

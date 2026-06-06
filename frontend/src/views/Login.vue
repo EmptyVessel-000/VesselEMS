@@ -49,8 +49,8 @@ async function handleLogin() {
     await loginUser(formData.email, formData.password)
     ElMessage.success('登录成功')
     router.push('/main/dashboard')
-  } catch {
-    // 错误已在 request.js 拦截器中处理
+  } catch (e) {
+    ElMessage.error(e?.message || '邮箱或密码错误')
   } finally {
     loading.value = false
   }

@@ -1,8 +1,12 @@
 package vesselems.dto;
 
+import java.util.List;
+
 import jakarta.validation.constraints.Size;
 
 public class UserUpdateDto {
+
+    private String username;
 
     private String nickname;
 
@@ -18,6 +22,18 @@ public class UserUpdateDto {
 
     @Size(min = 6, message = "密码不少于6位")
     private String password;
+
+    private Boolean enabled;
+
+    private List<Long> roles;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public String getNickname() {
         return nickname;
@@ -67,11 +83,27 @@ public class UserUpdateDto {
         this.departmentId = departmentId;
     }
 
-    public String password() {
+    public String getPassword() {
         return password;
     }
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public List<Long> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Long> roles) {
+        this.roles = roles;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
     }
 }

@@ -36,7 +36,13 @@ const allMenus = ref([]), tableLoading = ref(false)
 function buildTree(list) {
   const map={}, roots=[]
   list.forEach(item=>{item.children=[]; map[item.id]=item})
-  list.forEach(item=>{if(item.parentId&&map[item.parentId])map[item.parentId].children.push(item);else roots.push(item)})
+  list.forEach(item=>{
+    if(item.parentId != null && map[item.parentId]) {
+      map[item.parentId].children.push(item)
+    } else {
+      roots.push(item)
+    }
+  })
   return roots
 }
 

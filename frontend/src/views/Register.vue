@@ -12,8 +12,24 @@
           <el-form-item prop="username">
             <el-input v-model="formData.username" placeholder="请输入用户名" :prefix-icon="User" size="large" />
           </el-form-item>
+          <el-form-item prop="nickname">
+            <el-input v-model="formData.nickname" placeholder="请输入昵称" :prefix-icon="User" size="large" />
+          </el-form-item>
+          <el-form-item prop="realName">
+            <el-input v-model="formData.realName" placeholder="请输入真实姓名" :prefix-icon="User" size="large" />
+          </el-form-item>
+          <el-form-item prop="gender">
+            <el-select v-model="formData.gender" placeholder="请选择性别" size="large" style="width:100%">
+              <el-option label="未知" :value="0" />
+              <el-option label="男" :value="1" />
+              <el-option label="女" :value="2" />
+            </el-select>
+          </el-form-item>
           <el-form-item prop="email">
             <el-input v-model="formData.email" placeholder="请输入邮箱" :prefix-icon="Message" size="large" />
+          </el-form-item>
+          <el-form-item prop="telephone">
+            <el-input v-model="formData.telephone" placeholder="请输入手机号（选填）" :prefix-icon="Message" size="large" />
           </el-form-item>
           <el-form-item prop="password">
             <el-input v-model="formData.password" type="password" placeholder="请输入密码" :prefix-icon="Lock" size="large" show-password />
@@ -41,7 +57,16 @@ import request from '../api/request.js'
 const router = useRouter()
 const formRef = ref(null)
 const loading = ref(false)
-const formData = reactive({ username: '', email: '', password: '', confirmPassword: '', roleName: 'user' })
+const formData = reactive({
+  username: '',
+  nickname: '',
+  realName: '',
+  gender: null,
+  email: '',
+  telephone: '',
+  password: '',
+  confirmPassword: ''
+})
 
 const validateConfirm = (rule, value, callback) => {
   if (!value) callback(new Error('请再次输入密码'))
@@ -50,10 +75,14 @@ const validateConfirm = (rule, value, callback) => {
 }
 
 const formRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 2, max: 20, trigger: 'blur' }],
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 2, max: 20, message: '用户名长度2-20位', trigger: 'blur' }],
+  nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+  realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
+  gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
   email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
+  telephone: [{ pattern: /^[\d\-+]{0,32}$/, message: '手机号格式不正确', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, message: '密码不少于6位', trigger: 'blur' }],
-  confirmPassword: [{ required: true, validator: validateConfirm, trigger: 'blur' }],
+  confirmPassword: [{ required: true, validator: validateConfirm, trigger: 'blur' }]
 }
 
 async function handleRegister() {
@@ -63,9 +92,12 @@ async function handleRegister() {
   try {
     await request.post('/api/auth/register', {
       username: formData.username,
+      nickname: formData.nickname,
+      realName: formData.realName,
+      gender: formData.gender,
       email: formData.email,
-      password: formData.password,
-      roleName: 'user'
+      telephone: formData.telephone || '',
+      password: formData.password
     })
     ElMessage.success('注册成功，请登录')
     router.push('/login')
@@ -75,7 +107,7 @@ async function handleRegister() {
 
 <style scoped>
 .register-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
-.register-card { display: flex; width: 780px; max-width: 95vw; min-height: 560px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden; }
+.register-card { display: flex; width: 780px; max-width: 95vw; min-height: 680px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); overflow: hidden; }
 .register-brand { flex: 0 0 320px; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 40px; }
 .brand-icon { margin-bottom: 20px; color: #3b82f6; }
 .brand-title { font-size: 28px; font-weight: 700; letter-spacing: 2px; margin-bottom: 8px; }
