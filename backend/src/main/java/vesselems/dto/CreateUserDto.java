@@ -19,6 +19,18 @@ public class CreateUserDto {
     @Email
     private String email;
 
+    private String nickname;
+
+    private String realName;
+
+    private Integer gender;
+
+    private String telephone;
+
+    private Long departmentId;
+
+    private String remark;
+
     private List<Long> roles;
 
     private Boolean enabled;
@@ -45,6 +57,54 @@ public class CreateUserDto {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName;
+    }
+
+    public Integer getGender() {
+        return gender;
+    }
+
+    public void setGender(Integer gender) {
+        this.gender = gender;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public List<Long> getRoles() {

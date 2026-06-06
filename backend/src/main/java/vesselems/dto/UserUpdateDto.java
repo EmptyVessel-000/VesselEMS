@@ -25,6 +25,8 @@ public class UserUpdateDto {
 
     private Boolean enabled;
 
+    private String remark;
+
     private List<Long> roles;
 
     public String getUsername() {
@@ -105,5 +107,13 @@ public class UserUpdateDto {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 }

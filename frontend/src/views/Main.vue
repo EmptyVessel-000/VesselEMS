@@ -24,24 +24,25 @@
           <template #title>仪表盘</template>
         </el-menu-item>
 
-        <el-sub-menu index="system" v-if="hasPermission('user:view')||hasPermission('role:view')||hasPermission('dept:view')||hasPermission('menu:view')||hasPermission('perm:view')">
+        <el-sub-menu index="system" v-if="hasMenu(2)">
           <template #title>
             <el-icon><Setting /></el-icon>
             <span>系统管理</span>
           </template>
-          <el-menu-item v-if="hasPermission('user:view')" index="/main/system/users">用户管理</el-menu-item>
-          <el-menu-item v-if="hasPermission('role:view')" index="/main/system/roles">角色管理</el-menu-item>
-          <el-menu-item v-if="hasPermission('menu:view')" index="/main/system/menus">菜单管理</el-menu-item>
-          <el-menu-item v-if="hasPermission('perm:view')" index="/main/system/permission">权限管理</el-menu-item>
-          <el-menu-item v-if="hasPermission('dept:view')" index="/main/system/dept">部门管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(21)" index="/main/system/users">用户管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(22)" index="/main/system/roles">角色管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(23)" index="/main/system/menus">菜单管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(24)" index="/main/system/permission">权限管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(25)" index="/main/system/dept">部门管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(26)" index="/main/system/config">系统配置</el-menu-item>
         </el-sub-menu>
 
-        <el-sub-menu index="rag" v-if="hasPermission('doc:view')">
+        <el-sub-menu index="rag" v-if="hasMenu(3)">
           <template #title>
             <el-icon><Cpu /></el-icon>
             <span>RAG管理</span>
           </template>
-          <el-menu-item index="/main/rag/documents">文档管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(31)" index="/main/rag/documents">文档管理</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="user">
@@ -117,7 +118,7 @@ import {
   UserFilled, ArrowDown, SwitchButton
 } from '@element-plus/icons-vue'
 import { userStore, logout } from '../stores/user.js'
-import { hasPermission } from '../stores/permissions.js'
+import { hasPermission, hasMenu } from '../stores/permissions.js'
 
 const route = useRoute()
 const router = useRouter()

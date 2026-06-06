@@ -68,6 +68,12 @@ public class UserService {
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setEmail(dto.getEmail());
+        user.setNickname(dto.getNickname());
+        user.setRealName(dto.getRealName());
+        user.setGender(dto.getGender());
+        user.setTelephone(dto.getTelephone());
+        user.setDepartmentId(dto.getDepartmentId());
+        user.setRemark(dto.getRemark());
         user.setStatus(dto.getEnabled() != null && dto.getEnabled() ? 1 : 0);
         user.setCreateTime(LocalDateTime.now());
         user.setModifyTime(LocalDateTime.now());
@@ -120,8 +126,11 @@ public class UserService {
             user.setTelephone(dto.getTelephone());
         if (dto.getDepartmentId() != null)
             user.setDepartmentId(dto.getDepartmentId());
+        if (dto.getRemark() != null)
+            user.setRemark(dto.getRemark());
         if (dto.getEnabled() != null)
             user.setStatus(dto.getEnabled() ? 1 : 0);
+        user.setModifyTime(LocalDateTime.now());
         userRepository.save(user);
 
         if (dto.getRoles() != null) {

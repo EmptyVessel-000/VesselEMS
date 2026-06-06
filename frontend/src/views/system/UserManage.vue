@@ -9,8 +9,8 @@
     <el-card class="table-card" shadow="never">
       <div class="toolbar">
         <div class="toolbar-left">
-          <el-button v-if="hasPermission('user:create')" type="primary" :icon="Plus" @click="handleAdd">新增用户</el-button>
-          <el-button v-if="hasPermission('user:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length === 0" @click="handleBatchDelete">批量删除</el-button>
+          <el-button v-if="hasMenu(21) && hasPermission('user:create')" type="primary" :icon="Plus" @click="handleAdd">新增用户</el-button>
+          <el-button v-if="hasMenu(21) && hasPermission('user:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length === 0" @click="handleBatchDelete">批量删除</el-button>
         </div>
         <div class="toolbar-right">
           <span class="selected-tip" v-if="selectedIds.length > 0">已选择 <strong>{{ selectedIds.length }}</strong> 项</span>
@@ -42,8 +42,8 @@
               <el-tag type="danger" size="small">系统保护</el-tag>
             </template>
             <template v-else>
-              <el-button v-if="hasPermission('user:update')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-              <el-popconfirm v-if="hasPermission('user:delete')" title="确定删除该用户吗？" @confirm="handleDelete(row)">
+              <el-button v-if="hasMenu(21) && hasPermission('user:update')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+              <el-popconfirm v-if="hasMenu(21) && hasPermission('user:delete')" title="确定删除该用户吗？" @confirm="handleDelete(row)">
                 <template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template>
               </el-popconfirm>
             </template>
@@ -60,6 +60,22 @@
         <el-form-item label="用户名" prop="username"><el-input v-model="formData.username" /></el-form-item>
         <el-form-item label="密码" prop="password"><el-input v-model="formData.password" type="password" :placeholder="isEdit ? '留空则不修改密码' : '请输入密码'" show-password /></el-form-item>
         <el-form-item label="邮箱" prop="email"><el-input v-model="formData.email" /></el-form-item>
+        <el-form-item label="昵称"><el-input v-model="formData.nickname" /></el-form-item>
+        <el-form-item label="真实姓名"><el-input v-model="formData.realName" /></el-form-item>
+        <el-form-item label="性别">
+          <el-select v-model="formData.gender">
+            <el-option label="未知" :value="0" />
+            <el-option label="男" :value="1" />
+            <el-option label="女" :value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="手机号"><el-input v-model="formData.telephone" /></el-form-item>
+        <el-form-item label="部门">
+          <el-select v-model="formData.departmentId" placeholder="请选择部门" clearable style="width:100%">
+            <el-option v-for="d in deptOptions" :key="d.id" :label="d.dept_name" :value="d.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注"><el-input v-model="formData.remark" type="textarea" :rows="2" /></el-form-item>
         <el-form-item label="角色" prop="roleIds">
           <el-select v-model="formData.roleIds" placeholder="请选择角色" multiple style="width:100%">
             <el-option v-for="r in roleOptions.filter(r => r.role_name !== SUPER_ADMIN_ROLE_NAME)" :key="r.id" :label="r.role_name" :value="r.id" />
@@ -82,9 +98,10 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Plus, Delete, Edit } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
-import { hasPermission, BUILT_IN_ROLES } from '../../stores/permissions.js'
+import { hasPermission, hasMenu, BUILT_IN_ROLES } from '../../stores/permissions.js'
 
 const roleOptions = ref([])
+const deptOptions = ref([])
 const allUsers = ref([])
 const tableLoading = ref(false)
 const SUPER_ADMIN_ROLE_NAME = 'super_admin'
@@ -92,7 +109,14 @@ const SUPER_ADMIN_ROLE_NAME = 'super_admin'
 async function fetchRoles() {
   try {
     const d = await request.get('/api/roles')
-    roleOptions.value = (d || []).map(r => ({ id: r.id, role_name: r.roleName || r.name || '' }))
+    roleOptions.value = (d || []).filter(r => r.status !== 0).map(r => ({ id: r.id, role_name: r.roleName || r.name || '' }))
+  } catch {}
+}
+
+async function fetchDepts() {
+  try {
+    const d = await request.get('/api/departments')
+    deptOptions.value = (d || []).map(d => ({ id: d.id, dept_name: d.deptName || d.dept_name || '' }))
   } catch {}
 }
 
@@ -171,7 +195,7 @@ async function handleStatusToggle(row) {
 }
 
 const dialogVisible = ref(false), isEdit = ref(false), editId = ref(null), submitLoading = ref(false), formRef = ref(null)
-const formData = reactive({ username: '', password: '', email: '', roleIds: [], status: 1 })
+const formData = reactive({ username: '', password: '', email: '', nickname: '', realName: '', gender: 0, telephone: '', departmentId: null, remark: '', roleIds: [], status: 1 })
 const formRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }]
@@ -183,10 +207,15 @@ function handleEdit(row) {
   if (row.isSuperAdmin) { ElMessage.warning('超级管理员信息不可修改'); return }
   isEdit.value = true; editId.value = row.id
   formData.username = row.username; formData.password = ''; formData.email = row.email
+  formData.nickname = row.nickname || ''; formData.realName = row.realName || ''
+  formData.gender = row.gender != null ? row.gender : 0
+  formData.telephone = row.telephone || ''
+  formData.departmentId = row.departmentId || null
+  formData.remark = row.remark || ''
   formData.roleIds = [...(row.roleIds || [])]; formData.status = row.status
   dialogVisible.value = true
 }
-function resetForm() { formData.username = ''; formData.password = ''; formData.email = ''; formData.roleIds = []; formData.status = 1 }
+function resetForm() { formData.username = ''; formData.password = ''; formData.email = ''; formData.nickname = ''; formData.realName = ''; formData.gender = 0; formData.telephone = ''; formData.departmentId = null; formData.remark = ''; formData.roleIds = []; formData.status = 1 }
 function handleDialogClose() { resetForm(); formRef.value?.resetFields() }
 
 async function handleSubmit() {
@@ -195,7 +224,7 @@ async function handleSubmit() {
   if (!isEdit.value && !formData.password) { ElMessage.warning('请输入密码'); return }
   submitLoading.value = true
   try {
-    const payload = { username: formData.username, email: formData.email, roles: formData.roleIds, enabled: formData.status === 1 }
+    const payload = { username: formData.username, email: formData.email, nickname: formData.nickname, realName: formData.realName, gender: formData.gender, telephone: formData.telephone, departmentId: formData.departmentId, remark: formData.remark, roles: formData.roleIds, enabled: formData.status === 1 }
     if (formData.password) payload.password = formData.password
     if (isEdit.value) { await request.put(`/api/users/${editId.value}/info`, payload); ElMessage.success('用户信息修改成功') }
     else { await request.post('/api/users', payload); ElMessage.success('用户创建成功') }
@@ -223,7 +252,7 @@ async function confirmBatchDelete() {
   finally { batchLoading.value = false }
 }
 
-onMounted(async () => { await fetchRoles(); await fetchUsers() })
+onMounted(async () => { await fetchRoles(); await fetchDepts(); await fetchUsers() })
 </script>
 
 <style scoped>

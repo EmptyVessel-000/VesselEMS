@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 import vesselems.model.PermissionRole;
 import vesselems.model.Role;
 import vesselems.model.RoleMenu;
@@ -41,6 +43,8 @@ public class RoleService {
             throw new IllegalArgumentException("角色标识已存在: " + role.getRoleName());
         }
         role.setStatus(role.getStatus() != null ? role.getStatus() : 1);
+        role.setCreateTime(LocalDateTime.now());
+        role.setModifyTime(LocalDateTime.now());
         return roleRepository.save(role);
     }
 
@@ -58,6 +62,7 @@ public class RoleService {
             role.setSortOrder(updated.getSortOrder());
         if (updated.getStatus() != null)
             role.setStatus(updated.getStatus());
+        role.setModifyTime(LocalDateTime.now());
         return roleRepository.save(role);
     }
 

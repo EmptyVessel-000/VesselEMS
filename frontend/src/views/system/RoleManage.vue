@@ -7,7 +7,7 @@
       </el-form>
     </el-card>
     <el-card class="table-card" shadow="never">
-      <div class="toolbar"><div class="toolbar-left"><el-button v-if="hasPermission('role:manage')" type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button><el-button v-if="hasPermission('role:manage')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
+      <div class="toolbar"><div class="toolbar-left"><el-button v-if="hasMenu(22) && hasPermission('role:manage')" type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button><el-button v-if="hasMenu(22) && hasPermission('role:manage')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
       <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width:100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="50" align="center" :selectable="(row) => !BUILT_IN_ROLES.includes(row.roleName)" />
         <el-table-column type="index" label="序号" width="60" align="center" />
@@ -17,16 +17,16 @@
         <el-table-column prop="createTime" label="创建时间" width="170" />
         <el-table-column prop="status" label="状态" width="75" align="center">
           <template #default="{ row }">
-            <el-switch v-if="BUILT_IN_ROLES.includes(row.roleName)" :model-value="row.status" active-value="1" inactive-value="0" disabled />
+            <el-switch v-if="BUILT_IN_ROLES.includes(row.roleName)" :model-value="row.status" :active-value="1" :inactive-value="0" disabled />
             <el-switch v-else v-model="row.status" :active-value="1" :inactive-value="0" @change="handleStatusChange(row)" />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="280" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasPermission('role:assignMenu')" type="success" size="small" :icon="Menu" link @click="handleAssignMenu(row)">分配菜单</el-button>
-            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasPermission('role:assignPerm')" type="warning" size="small" :icon="Key" link @click="handleAssignPerm(row)">分配权限</el-button>
-            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasPermission('role:manage')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasPermission('role:manage')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
+            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:assignMenu')" type="success" size="small" :icon="Menu" link @click="handleAssignMenu(row)">分配菜单</el-button>
+            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:assignPerm')" type="warning" size="small" :icon="Key" link @click="handleAssignPerm(row)">分配权限</el-button>
+            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:manage')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:manage')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -65,7 +65,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Plus, Delete, Edit, Menu, Key } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
-import { hasPermission, BUILT_IN_ROLES } from '../../stores/permissions.js'
+import { hasPermission, hasMenu, BUILT_IN_ROLES } from '../../stores/permissions.js'
 
 const allRoles = ref([]), tableLoading = ref(false)
 
@@ -148,7 +148,7 @@ async function handleAssignMenu(row) {
   currentRoleName.value = row.roleName; currentRoleId.value = row.id
   try {
     const menuList = await request.get('/api/menus')
-    menuTreeData.value = buildTree((menuList || []).map(m => ({ id: m.id, label: m.menuName, parentId: m.parentId })))
+    menuTreeData.value = buildTree((menuList || []).filter(m => m.id !== 1).map(m => ({ id: m.id, label: m.menuName, parentId: m.parentId })))
     const assigned = await request.get(`/api/roles/${row.id}/menus`)
     currentMenuKeys.value = (assigned || []).map(rm => rm.menuId)
   } catch { menuTreeData.value = []; currentMenuKeys.value = [] }

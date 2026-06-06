@@ -1,5 +1,6 @@
 package vesselems.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -35,6 +36,8 @@ public class DepartmentService {
 
     public Department createDepartment(Department department) {
         department.setStatus(department.getStatus() != null ? department.getStatus() : 1);
+        department.setCreateTime(LocalDateTime.now());
+        department.setModifyTime(LocalDateTime.now());
         return departmentRepository.save(department);
     }
 
@@ -54,6 +57,7 @@ public class DepartmentService {
             department.setSortOrder(updated.getSortOrder());
         if (updated.getStatus() != null)
             department.setStatus(updated.getStatus());
+        department.setModifyTime(LocalDateTime.now());
         return departmentRepository.save(department);
     }
 
