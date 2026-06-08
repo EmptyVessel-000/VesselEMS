@@ -7,7 +7,7 @@
       </el-form>
     </el-card>
     <el-card class="table-card" shadow="never">
-      <div class="toolbar"><div class="toolbar-left"><el-button type="primary" :icon="Plus" @click="handleAdd(null)">新增部门</el-button><el-button type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
+      <div class="toolbar"><div class="toolbar-left"><el-button v-if="hasPermission('dept:manage')" type="primary" :icon="Plus" @click="handleAdd(null)">新增部门</el-button><el-button v-if="hasPermission('dept:manage')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
       <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width:100%" row-key="id" :tree-props="{children:'children'}" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
@@ -19,9 +19,9 @@
         <el-table-column prop="createTime" label="创建时间" width="170" />
         <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="{row}">
-            <el-button type="success" size="small" :icon="Plus" link @click="handleAdd(row)">添加子部门</el-button>
-            <el-button type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
+            <el-button v-if="hasPermission('dept:manage')" type="success" size="small" :icon="Plus" link @click="handleAdd(row)">添加子部门</el-button>
+            <el-button v-if="hasPermission('dept:manage')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-if="hasPermission('dept:manage')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -52,13 +52,20 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Plus, Delete, Edit } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
+import { hasPermission } from '../../stores/permissions.js'
 
 const allDepts = ref([]), tableLoading = ref(false)
 
 function buildTree(list) {
   const map={}, roots=[]
   list.forEach(item=>{item.children=[]; map[item.id]=item})
-  list.forEach(item=>{if(item.parentId&&map[item.parentId])map[item.parentId].children.push(item);else roots.push(item)})
+  list.forEach(item=>{
+    if(item.parentId != null && map[item.parentId]) {
+      map[item.parentId].children.push(item)
+    } else {
+      roots.push(item)
+    }
+  })
   return roots
 }
 
@@ -108,7 +115,7 @@ async function handleSubmit(){
   try{await formRef.value.validate()}catch{return}
   submitLoading.value=true
   try{
-    const payload={deptName:formData.deptName,leader:formData.leader,phone:formData.phone,email:formData.email,sortOrder:formData.sortOrder,parentId:parentId.value||0}
+    const payload={deptName:formData.deptName,leader:formData.leader,phone:formData.phone,email:formData.email,sortOrder:formData.sortOrder,parentId:parentId.value||null}
     if(isEdit.value){await request.put(`/api/departments/${editId.value}`,payload);ElMessage.success('部门修改成功')}
     else{await request.post('/api/departments',payload);ElMessage.success('部门创建成功')}
     dialogVisible.value=false;resetForm();await fetchDepts()

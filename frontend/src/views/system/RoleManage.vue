@@ -7,20 +7,26 @@
       </el-form>
     </el-card>
     <el-card class="table-card" shadow="never">
-      <div class="toolbar"><div class="toolbar-left"><el-button type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button><el-button type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
+      <div class="toolbar"><div class="toolbar-left"><el-button v-if="hasMenu(22) && hasPermission('role:manage')" type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button><el-button v-if="hasMenu(22) && hasPermission('role:manage')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
       <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width:100%" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="50" align="center" />
+        <el-table-column type="selection" width="50" align="center" :selectable="(row) => !BUILT_IN_ROLES.includes(row.roleName)" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="roleName" label="角色标识" min-width="150" />
         <el-table-column prop="description" label="角色描述" min-width="250" show-overflow-tooltip />
         <el-table-column prop="sortOrder" label="排序" width="70" align="center" />
         <el-table-column prop="createTime" label="创建时间" width="170" />
+        <el-table-column prop="status" label="状态" width="75" align="center">
+          <template #default="{ row }">
+            <el-switch v-if="BUILT_IN_ROLES.includes(row.roleName)" :model-value="row.status" :active-value="1" :inactive-value="0" disabled />
+            <el-switch v-else v-model="row.status" :active-value="1" :inactive-value="0" @change="handleStatusChange(row)" />
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="280" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="success" size="small" :icon="Menu" link @click="handleAssignMenu(row)">分配菜单</el-button>
-            <el-button type="warning" size="small" :icon="Key" link @click="handleAssignPerm(row)">分配权限</el-button>
-            <el-button type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
+            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:assignMenu')" type="success" size="small" :icon="Menu" link @click="handleAssignMenu(row)">分配菜单</el-button>
+            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:assignPerm')" type="warning" size="small" :icon="Key" link @click="handleAssignPerm(row)">分配权限</el-button>
+            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:manage')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:manage')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -32,6 +38,7 @@
         <el-form-item label="角色标识" prop="roleName"><el-input v-model="formData.roleName" :disabled="isEdit" /></el-form-item>
         <el-form-item label="角色描述" prop="description"><el-input v-model="formData.description" type="textarea" :rows="3" /></el-form-item>
         <el-form-item label="排序" prop="sortOrder"><el-input-number v-model="formData.sortOrder" :min="0" :max="999" /></el-form-item>
+        <el-form-item label="状态"><el-switch v-model="formData.status" :active-value="1" :inactive-value="0" /></el-form-item>
       </el-form>
       <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button></template>
     </el-dialog>
@@ -58,6 +65,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Plus, Delete, Edit, Menu, Key } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
+import { hasPermission, hasMenu, BUILT_IN_ROLES } from '../../stores/permissions.js'
 
 const allRoles = ref([]), tableLoading = ref(false)
 
@@ -80,13 +88,13 @@ const selectedIds = ref([])
 function handleSelectionChange(rows) { selectedIds.value = rows.map(r=>r.id) }
 
 const dialogVisible = ref(false), isEdit = ref(false), editId = ref(null), submitLoading = ref(false), formRef = ref(null)
-const formData = reactive({ roleName: '', description: '', sortOrder: 0 })
+const formData = reactive({ roleName: '', description: '', sortOrder: 0, status: 1 })
 const formRules = { roleName: [{ required: true, message: '请输入角色标识', trigger: 'blur' }] }
 const dialogTitle = computed(() => isEdit.value ? '编辑角色' : '新增角色')
 
 function handleAdd() { isEdit.value=false; editId.value=null; resetForm(); dialogVisible.value=true }
-function handleEdit(row) { isEdit.value=true; editId.value=row.id; formData.roleName=row.roleName; formData.description=row.description; formData.sortOrder=row.sortOrder||0; dialogVisible.value=true }
-function resetForm() { formData.roleName=''; formData.description=''; formData.sortOrder=0 }
+function handleEdit(row) { isEdit.value=true; editId.value=row.id; formData.roleName=row.roleName; formData.description=row.description; formData.sortOrder=row.sortOrder||0; formData.status=row.status||1; dialogVisible.value=true }
+function resetForm() { formData.roleName=''; formData.description=''; formData.sortOrder=0; formData.status=1 }
 function handleDialogClose() { resetForm(); formRef.value?.resetFields() }
 
 async function handleSubmit() {
@@ -94,7 +102,7 @@ async function handleSubmit() {
   try { await formRef.value.validate() } catch { return }
   submitLoading.value = true
   try {
-    const payload = { roleName: formData.roleName, description: formData.description, sortOrder: formData.sortOrder }
+    const payload = { roleName: formData.roleName, description: formData.description, sortOrder: formData.sortOrder, status: formData.status }
     if (isEdit.value) { await request.put(`/api/roles/${editId.value}`, payload); ElMessage.success('角色修改成功') }
     else { await request.post('/api/roles', payload); ElMessage.success('角色创建成功') }
     dialogVisible.value = false; resetForm(); await fetchRoles()
@@ -103,6 +111,16 @@ async function handleSubmit() {
 
 async function handleDelete(row) { try { await request.delete(`/api/roles/${row.id}`); ElMessage.success(`角色「${row.roleName}」已删除`); await fetchRoles() } catch {} }
 
+async function handleStatusChange(row) {
+  try {
+    await request.put(`/api/roles/${row.id}`, { roleName: row.roleName, description: row.description, sortOrder: row.sortOrder, status: row.status })
+    ElMessage.success(`角色「${row.roleName}」已${row.status === 1 ? '启用' : '禁用'}`)
+  } catch {
+    row.status = row.status === 1 ? 0 : 1
+    ElMessage.error('状态更新失败')
+  }
+}
+
 const batchDeleteVisible = ref(false), batchLoading = ref(false)
 function handleBatchDelete() { if (selectedIds.value.length===0) { ElMessage.warning('请先选择'); return }; batchDeleteVisible.value = true }
 async function confirmBatchDelete() { batchLoading.value=true; try { for (const id of selectedIds.value) await request.delete(`/api/roles/${id}`); ElMessage.success(`已删除 ${selectedIds.value.length} 个角色`); selectedIds.value=[]; batchDeleteVisible.value=false; await fetchRoles() } catch { ElMessage.error('批量删除失败') } finally { batchLoading.value=false } }
@@ -110,13 +128,61 @@ async function confirmBatchDelete() { batchLoading.value=true; try { for (const 
 const menuDialogVisible=ref(false), permDialogVisible=ref(false), currentRoleName=ref(''), currentRoleId=ref(null)
 const currentMenuKeys=ref([]), currentPermKeys=ref([]), menuTreeRef=ref(null), permTreeRef=ref(null)
 
-const menuTreeData = ref([{id:1,label:'仪表盘'},{id:2,label:'系统管理',children:[{id:21,label:'用户管理'},{id:22,label:'角色管理'},{id:23,label:'菜单管理'},{id:24,label:'权限管理'},{id:25,label:'部门管理'}]},{id:3,label:'RAG管理',children:[{id:31,label:'文档管理'}]},{id:5,label:'用户中心',children:[{id:51,label:'个人信息'}]}])
-const permTreeData = ref([{id:'p1',label:'用户管理',children:[{id:'p1-1',label:'user:view'},{id:'p1-2',label:'user:create'},{id:'p1-3',label:'user:update'},{id:'p1-4',label:'user:delete'}]},{id:'p2',label:'角色管理',children:[{id:'p2-1',label:'role:manage'}]},{id:'p3',label:'菜单管理',children:[{id:'p3-1',label:'menu:manage'}]},{id:'p4',label:'部门管理',children:[{id:'p4-1',label:'dept:view'}]},{id:'p5',label:'RAG管理',children:[{id:'p5-1',label:'doc:manage'}]}])
+const menuTreeData = ref([])
+const permTreeData = ref([])
 
-function handleAssignMenu(row) { currentRoleName.value=row.roleName; currentRoleId.value=row.id; currentMenuKeys.value=row.roleName==='super_admin'?[1,2,21,22,23,24,25,3,31,5,51]:[1,5,51]; menuDialogVisible.value=true }
-function handleMenuSave() { ElMessage.success(`菜单分配成功，共 ${menuTreeRef.value.getCheckedKeys().length} 项`); menuDialogVisible.value=false }
-function handleAssignPerm(row) { currentRoleName.value=row.roleName; currentRoleId.value=row.id; currentPermKeys.value=row.roleName==='super_admin'?['p1-1','p1-2','p1-3','p1-4','p2-1','p3-1','p4-1','p5-1']:['p1-1']; permDialogVisible.value=true }
-function handlePermSave() { ElMessage.success(`权限分配成功，共 ${permTreeRef.value.getCheckedKeys().length} 项`); permDialogVisible.value=false }
+function buildTree(list) {
+  const map = {}, roots = []
+  list.forEach(item => { item.children = []; map[item.id] = item })
+  list.forEach(item => {
+    if (item.parentId != null && map[item.parentId]) {
+      map[item.parentId].children.push(item)
+    } else {
+      roots.push(item)
+    }
+  })
+  return roots
+}
+
+async function handleAssignMenu(row) {
+  currentRoleName.value = row.roleName; currentRoleId.value = row.id
+  try {
+    const menuList = await request.get('/api/menus')
+    menuTreeData.value = buildTree((menuList || []).filter(m => m.id !== 1).map(m => ({ id: m.id, label: m.menuName, parentId: m.parentId })))
+    const assigned = await request.get(`/api/roles/${row.id}/menus`)
+    currentMenuKeys.value = (assigned || []).map(rm => rm.menuId)
+  } catch { menuTreeData.value = []; currentMenuKeys.value = [] }
+  menuDialogVisible.value = true
+}
+
+async function handleMenuSave() {
+  try {
+    const checkedIds = menuTreeRef.value.getCheckedKeys()
+    await request.post(`/api/roles/${currentRoleId.value}/menus`, checkedIds)
+    ElMessage.success(`菜单分配成功，共 ${checkedIds.length} 项`)
+  } catch { ElMessage.error('菜单分配失败') }
+  menuDialogVisible.value = false
+}
+
+async function handleAssignPerm(row) {
+  currentRoleName.value = row.roleName; currentRoleId.value = row.id
+  try {
+    const permList = await request.get('/api/permissions')
+    permTreeData.value = (permList || []).map(p => ({ id: p.id, label: p.permissionCode }))
+    const assigned = await request.get(`/api/roles/${row.id}/permissions`)
+    currentPermKeys.value = (assigned || []).map(rp => rp.permissionId)
+  } catch { permTreeData.value = []; currentPermKeys.value = [] }
+  permDialogVisible.value = true
+}
+
+async function handlePermSave() {
+  try {
+    const checkedIds = permTreeRef.value.getCheckedKeys()
+    await request.post(`/api/roles/${currentRoleId.value}/permissions`, checkedIds)
+    ElMessage.success(`权限分配成功，共 ${checkedIds.length} 项`)
+  } catch { ElMessage.error('权限分配失败') }
+  permDialogVisible.value = false
+}
 
 onMounted(() => { fetchRoles() })
 </script>

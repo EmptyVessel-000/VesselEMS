@@ -1,5 +1,7 @@
 package vesselems.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,17 +32,19 @@ public class AuthService {
     }
 
     public User registerUser(RegisterDto dto) {
-        if (userRepository.existsByEmail(dto.email())) {
-            throw new IllegalArgumentException("邮箱已被使用: " + dto.email());
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("邮箱已被使用: " + dto.getEmail());
         }
         User user = new User();
         dto.apply(user);
-        user.setPassword(passwordEncoder.encode(dto.password()));
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setCreateTime(LocalDateTime.now());
+        user.setModifyTime(LocalDateTime.now());
         user.setStatus(1);
         user = userRepository.save(user);
 
-        Role role = roleRepository.findByRoleName(dto.roleName())
-                .orElseThrow(() -> new IllegalArgumentException("角色不存在: " + dto.roleName()));
+        Role role = roleRepository.findById(2L)
+                .orElseThrow(() -> new IllegalArgumentException("默认角色(new_user)不存在"));
         UserRole userRole = new UserRole();
         userRole.setUserId(user.getId());
         userRole.setRoleId(role.getId());

@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import request from '../api/request.js'
+import { loadPermissions } from './permissions.js'
 
 export const userStore = reactive({
   user: null,
@@ -16,16 +17,11 @@ export function setToken(token) {
 
 export async function loginUser(email, password) {
   const res = await request.post('/api/auth/login', { email, password })
-  // 后端返回 { token, user } 格式
-  if (res.token) {
-    setToken(res.token)
-  }
-  if (res.user) {
-    userStore.user = res.user
-  } else {
-    userStore.user = res
-  }
+  if (res.token) setToken(res.token)
+  if (res.user) userStore.user = res.user
+  else userStore.user = res
   userStore.isAuthenticated = true
+  await loadPermissions()
   return res
 }
 
@@ -33,6 +29,7 @@ export async function checkAuth() {
   const res = await request.get('/api/auth/me')
   userStore.user = res
   userStore.isAuthenticated = true
+  await loadPermissions()
   return res
 }
 

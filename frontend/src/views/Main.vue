@@ -24,26 +24,25 @@
           <template #title>仪表盘</template>
         </el-menu-item>
 
-        <el-sub-menu index="system">
+        <el-sub-menu index="system" v-if="hasMenu(2)">
           <template #title>
             <el-icon><Setting /></el-icon>
             <span>系统管理</span>
           </template>
-          <el-menu-item index="/main/system/users">用户管理</el-menu-item>
-          <el-menu-item index="/main/system/roles">角色管理</el-menu-item>
-          <el-menu-item index="/main/system/menus">菜单管理</el-menu-item>
-          <el-menu-item index="/main/system/dict">字典管理</el-menu-item>
-          <el-menu-item index="/main/system/permission">权限管理</el-menu-item>
-          <el-menu-item index="/main/system/dept">部门管理</el-menu-item>
-          <el-menu-item index="/main/system/config">系统配置</el-menu-item>
+          <el-menu-item v-if="hasMenu(21)" index="/main/system/users">用户管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(22)" index="/main/system/roles">角色管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(23)" index="/main/system/menus">菜单管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(24)" index="/main/system/permission">权限管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(25)" index="/main/system/dept">部门管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(26)" index="/main/system/config">系统配置</el-menu-item>
         </el-sub-menu>
 
-        <el-sub-menu index="rag">
+        <el-sub-menu index="rag" v-if="hasMenu(3)">
           <template #title>
             <el-icon><Cpu /></el-icon>
             <span>RAG管理</span>
           </template>
-          <el-menu-item index="/main/rag/documents">文档管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(31)" index="/main/rag/documents">文档管理</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="user">
@@ -119,30 +118,26 @@ import {
   UserFilled, ArrowDown, SwitchButton
 } from '@element-plus/icons-vue'
 import { userStore, logout } from '../stores/user.js'
+import { hasPermission, hasMenu } from '../stores/permissions.js'
 
 const route = useRoute()
 const router = useRouter()
 const isCollapse = ref(false)
 
-// 当前激活菜单项
 const activeMenu = computed(() => route.path)
 
-// 面包屑标题
 const breadcrumbTitle = computed(() => {
   return route.meta?.title || ''
 })
 
-// 当前用户名
 const displayName = computed(() => {
   return userStore.user?.username || ''
 })
 
-// 跳转个人信息页
 function goProfile() {
   router.push('/main/user/profile')
 }
 
-// 退出登录
 function handleLogout() {
   logout()
   router.push('/login')
@@ -155,7 +150,6 @@ function handleLogout() {
   overflow: hidden;
 }
 
-/* ======== 侧边栏 ======== */
 .main-aside {
   background: #1e293b;
   transition: width 0.3s;
@@ -190,7 +184,6 @@ function handleLogout() {
   overflow-x: hidden;
 }
 
-/* Element Plus 子菜单背景覆盖 */
 .aside-menu .el-sub-menu .el-menu {
   background-color: #0f172a;
 }
@@ -203,7 +196,6 @@ function handleLogout() {
   background-color: #2563eb;
 }
 
-/* ======== 顶部导航栏 ======== */
 .main-header {
   height: 60px;
   background: #ffffff;
@@ -259,7 +251,6 @@ function handleLogout() {
   font-size: 12px;
 }
 
-/* ======== 内容区 ======== */
 .main-content {
   background: #f1f5f9;
   padding: 20px;

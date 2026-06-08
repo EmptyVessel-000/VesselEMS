@@ -2,11 +2,22 @@ package vesselems.dto;
 
 import java.util.List;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public class UserUpdateDto {
+public class CreateUserDto {
 
+    @NotBlank
     private String username;
+
+    @NotBlank
+    @Size(min = 6, message = "密码不少于6位")
+    private String password;
+
+    @NotBlank
+    @Email
+    private String email;
 
     private String nickname;
 
@@ -14,20 +25,15 @@ public class UserUpdateDto {
 
     private Integer gender;
 
-    private String email;
-
     private String telephone;
 
     private Long departmentId;
 
-    @Size(min = 6, message = "密码不少于6位")
-    private String password;
-
-    private Boolean enabled;
-
     private String remark;
 
     private List<Long> roles;
+
+    private Boolean enabled;
 
     public String getUsername() {
         return username;
@@ -35,6 +41,22 @@ public class UserUpdateDto {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getNickname() {
@@ -61,14 +83,6 @@ public class UserUpdateDto {
         this.gender = gender;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getTelephone() {
         return telephone;
     }
@@ -85,12 +99,12 @@ public class UserUpdateDto {
         this.departmentId = departmentId;
     }
 
-    public String getPassword() {
-        return password;
+    public String getRemark() {
+        return remark;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public List<Long> getRoles() {
@@ -107,13 +121,5 @@ public class UserUpdateDto {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
-    }
-
-    public String getRemark() {
-        return remark;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
     }
 }
