@@ -39,7 +39,7 @@ request.interceptors.response.use(
   (error) => {
     if (error.response) {
       const status = error.response.status
-      if (status === 401 || status === 403) {
+      if (status === 401) {
         localStorage.removeItem('token')
         if (router.currentRoute.value?.path !== '/login') {
           ElMessage.error('登录已过期，请重新登录')
@@ -47,6 +47,8 @@ request.interceptors.response.use(
         } else {
           ElMessage.error(error.response.data?.message || '邮箱或密码错误')
         }
+      } else if (status === 403) {
+        ElMessage.error(error.response.data?.message || '权限不足')
       } else {
         const message = error.response.data?.message || error.message || '请求失败'
         ElMessage.error(message)

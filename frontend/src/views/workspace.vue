@@ -111,14 +111,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Ship, DataBoard, Setting, Cpu, User, Fold, Expand,
   UserFilled, ArrowDown, SwitchButton
 } from '@element-plus/icons-vue'
 import { userStore, logout } from '../stores/user.js'
-import { hasPermission, hasMenu } from '../stores/permissions.js'
+import { hasPermission, hasMenu, loadPermissions, permissionStore } from '../stores/permissions.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -142,6 +142,12 @@ function handleLogout() {
   logout()
   router.push('/login')
 }
+
+onMounted(() => {
+  if (!permissionStore.loaded) {
+    loadPermissions()
+  }
+})
 </script>
 
 <style scoped>

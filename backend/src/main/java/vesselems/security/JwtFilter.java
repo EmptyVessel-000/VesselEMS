@@ -10,13 +10,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import vesselems.model.UserRole;
-import vesselems.repository.RoleRepository;
-import vesselems.repository.UserRoleRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import vesselems.model.UserRole;
+import vesselems.repository.RoleRepository;
+import vesselems.repository.UserRoleRepository;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -35,26 +35,44 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+
+        // 公开路径不验证token
+        if (path.equals("/api/auth/login") || path.equals("/api/auth/register")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String header = request.getHeader("Authorization");
 
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-
-            if (jwtService.validateToken(token)) {
-                Long userId = jwtService.getUserIdFromToken(token);
-
-                List<UserRole> userRoles = userRoleRepository.findByUserId(userId);
-                List<SimpleGrantedAuthority> authorities = userRoles.stream()
-                        .map(ur -> roleRepository.findById(ur.getRoleId()).orElse(null))
-                        .filter(r -> r != null)
-                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r.getRoleName().toUpperCase()))
-                        .collect(Collectors.toList());
-
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userId, null,
-                        authorities);
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }
+        if (header == null || !header.startsWith("Bearer ")) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":401,\"message\":\"未提供有效的认证令牌\"}");
+            return;
         }
+
+        String token = header.substring(7);
+
+        if (!jwtService.validateToken(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":401,\"message\":\"令牌已过期或无效\"}");
+            return;
+        }
+
+        Long userId = jwtService.getUserIdFromToken(token);
+
+        List<UserRole> userRoles = userRoleRepository.findByUserId(userId);
+        List<SimpleGrantedAuthority> authorities = userRoles.stream()
+                .map(ur -> roleRepository.findById(ur.getRoleId()).orElse(null))
+                .filter(r -> r != null)
+                .map(r -> new SimpleGrantedAuthority("ROLE_" + r.getRoleName().toUpperCase()))
+                .collect(Collectors.toList());
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userId, null,
+                authorities);
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
         chain.doFilter(request, response);
     }

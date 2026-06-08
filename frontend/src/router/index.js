@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import request from '../api/request.js'
 import workspaceRoutes from './workspace.js'
+import { checkAuth, userStore } from '../stores/user.js'
 
 const Login = () => import('../views/Login.vue')
 const Register = () => import('../views/Register.vue')
@@ -23,13 +23,16 @@ router.beforeEach(async (to, from, next) => {
   if (to.matched.some(r => r.meta.requiresAuth)) {
     const token = localStorage.getItem('token')
     if (!token) { next('/login'); return }
-    try {
-      await request.get('/api/auth/me')
-      next()
-    } catch {
-      localStorage.removeItem('token')
-      next('/login')
+    if (!userStore.isAuthenticated) {
+      try {
+        await checkAuth()
+      } catch {
+        localStorage.removeItem('token')
+        next('/login')
+        return
+      }
     }
+    next()
   } else {
     next()
   }

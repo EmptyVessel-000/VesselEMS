@@ -6,6 +6,7 @@ const PermissionManage = () => import('../views/workspace/PermissionManage.vue')
 const DeptManage = () => import('../views/workspace/DeptManage.vue')
 const DocumentManage = () => import('../views/workspace/DocumentManage.vue')
 const UserProfile = () => import('../views/workspace/UserProfile.vue')
+const ConfigManage = () => import('../views/workspace/ConfigManage.vue')
 
 export default [
   { path: 'dashboard', name: 'Dashboard', component: Dashboard, meta: { title: '仪表盘' } },
@@ -15,5 +16,6 @@ export default [
   { path: 'permissions', name: 'PermissionManage', component: PermissionManage, meta: { title: '权限管理' } },
   { path: 'depts', name: 'DeptManage', component: DeptManage, meta: { title: '部门管理' } },
   { path: 'documents', name: 'DocumentManage', component: DocumentManage, meta: { title: '文档管理' } },
-  { path: 'profile', name: 'UserProfile', component: UserProfile, meta: { title: '用户个人中心' } }
+  { path: 'profile', name: 'UserProfile', component: UserProfile, meta: { title: '用户个人中心' } },
+  { path: 'config', name: 'ConfigManage', component: ConfigManage, meta: { title: '系统配置' } }
 ]

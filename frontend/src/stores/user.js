@@ -1,6 +1,5 @@
 import { reactive } from 'vue'
 import request from '../api/request.js'
-import { loadPermissions } from './permissions.js'
 
 export const userStore = reactive({
   user: null,
@@ -21,7 +20,6 @@ export async function loginUser(email, password) {
   if (res.user) userStore.user = res.user
   else userStore.user = res
   userStore.isAuthenticated = true
-  await loadPermissions()
   return res
 }
 
@@ -29,7 +27,6 @@ export async function checkAuth() {
   const res = await request.get('/api/auth/me')
   userStore.user = res
   userStore.isAuthenticated = true
-  await loadPermissions()
   return res
 }
 
