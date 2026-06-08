@@ -73,7 +73,7 @@ public class AuthController {
 
         @PostMapping("/login")
         public ApiResponse<java.util.Map<String, Object>> login(@Valid @RequestBody LoginDto request) {
-                Authentication auth = authenticationManager.authenticate(
+                authenticationManager.authenticate(
                                 UsernamePasswordAuthenticationToken.unauthenticated(request.email(),
                                                 request.password()));
 
@@ -135,7 +135,8 @@ public class AuthController {
                         Set<Long> permissionIds = new LinkedHashSet<>();
                         for (var ur : userRoleRepository.findByUserId(userId)) {
                                 Role role = roleRepository.findById(ur.getRoleId()).orElse(null);
-                                if (role == null || (role.getStatus() != null && role.getStatus() != 1)) continue;
+                                if (role == null || (role.getStatus() != null && role.getStatus() != 1))
+                                        continue;
                                 roleMenuService.findByRoleId(ur.getRoleId())
                                                 .forEach(rm -> menuIds.add(rm.getMenuId()));
                                 permissionRoleService.findByRoleId(ur.getRoleId())
