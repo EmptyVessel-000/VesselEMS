@@ -48,7 +48,7 @@ async function handleLogin() {
   try {
     await loginUser(formData.email, formData.password)
     ElMessage.success('登录成功')
-    router.push('/main/dashboard')
+    router.push('/workspace/dashboard')
   } catch (e) {
     ElMessage.error(e?.message || '邮箱或密码错误')
   } finally {

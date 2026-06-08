@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "run-backend",
+      "type": "shell",
+      "command": "mvn",
+      "args": [
+        "spring-boot:run",
+        "-Dspring-boot.run.arguments=--spring.profiles.active=dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "run-frontend",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "run-all",
+      "dependsOn": [
+        "run-backend",
+        "run-frontend"
+      ],
+      "dependsOrder": "parallel",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Starting backend and frontend..."],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}

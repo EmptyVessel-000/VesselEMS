@@ -1,62 +1,43 @@
-# Worklist - 任务管理系统
+# VesselEMS 后端项目
 
-基于 Spring Boot + Vue.js 的任务管理系统，支持多角色权限分离和完整的任务生命周期管理。
+VesselEMS 企业级管理系统后端，基于 Spring Boot 4.0.3 + Java 21。
 
-## 功能特性
-
-- **多角色权限** - Guest（甲方）、Member（执行方）、Manager（协调方）
-- **任务管理** - 创建、分配、执行、验收、打回
-- **统计分析** - 任务统计、绩效分析、七日趋势
-- **安全认证** - Spring Security 权限控制
+作者：EmptyVessel
 
 ## 技术栈
 
-- **后端** - Spring Boot 3.x、Spring Security、MySQL 8.0
-- **前端** - Vue.js 3、Element Plus、ECharts 5
+- **Spring Boot 4.0.3** - 应用框架
+- **Spring Security** - 安全认证（JWT 无状态）
+- **Spring Data JPA** - 数据访问
+- **PostgreSQL** - 数据库
+- **jjwt 0.12.5** - JWT 令牌
 
 ## 快速开始
 
-### 环境要求
-- Java 17+
-- MySQL 8.0+
-- Maven 3.6+
-
-### 安装运行
-
 ```bash
-# 克隆项目
-git clone https://github.com/EmptyVessel-000/Worklist.git
-cd Worklist
+# 构建
+.\mvnw.cmd clean package
 
-# 配置数据库
-# 修改 application.properties 中的数据库连接信息
-
-# 构建运行
-mvn clean package
-java -jar target/worklist-1.0.0.jar
-
-# 访问系统
-# http://localhost:8080
+# 运行（开发环境）
+.\mvnw.cmd spring-boot:run
 ```
+
+服务将在 `http://localhost:8080` 启动。
 
 ## 项目结构
 
 ```
-src/main/
-├── java/emptyvessel/worklist/
-│   ├── config/       # 配置类
-│   ├── controller/   # 控制层
-│   ├── service/      # 业务逻辑
-│   ├── repository/   # 数据访问
-│   ├── model/        # 数据模型
-│   └── dto/          # 数据传输对象
-└── resources/
-    └── static/       # 前端页面
+src/main/java/vesselems/
+├── config/       # 配置类
+├── controller/   # 控制层
+├── service/      # 业务逻辑
+├── repository/   # 数据访问
+├── model/        # 数据模型
+├── dto/          # 数据传输对象
+├── security/     # JWT 安全
+├── common/       # 通用工具
+└── exception/    # 异常处理
 ```
-
-## 许可证
-
-MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 作者
 

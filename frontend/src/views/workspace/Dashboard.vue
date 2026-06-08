@@ -85,8 +85,8 @@
 <script setup>
 import { reactive, computed, onMounted } from 'vue'
 import { UserFilled, Document, School, Collection } from '@element-plus/icons-vue'
-import { userStore } from '../stores/user.js'
-import request from '../api/request.js'
+import { userStore } from '../../stores/user.js'
+import request from '../../api/request.js'
 
 const displayName = computed(() => userStore.user?.username || '')
 
@@ -108,9 +108,9 @@ async function fetchStats() {
 }
 
 const quickLinks = [
-  { path: '/main/system/users', label: '用户管理', icon: 'UserFilled' },
-  { path: '/main/rag/documents', label: '文档管理', icon: 'Document' },
-  { path: '/main/user/profile', label: '个人中心', icon: 'User' }
+  { path: '/workspace/users', label: '用户管理', icon: 'UserFilled' },
+  { path: '/workspace/documents', label: '文档管理', icon: 'Document' },
+  { path: '/workspace/profile', label: '个人中心', icon: 'User' }
 ]
 
 onMounted(() => {

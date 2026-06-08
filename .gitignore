@@ -20,7 +20,6 @@ build
 target
 
 # IDE
-.vscode/*
 !.vscode/extensions.json
 .idea
 *.suo

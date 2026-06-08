@@ -1,7 +1,7 @@
 {
-  "name": "worklist-frontend",
+  "name": "vesselems-frontend",
   "version": "1.0.0",
-  "description": "Worklist - 任务管理系统前端",
+  "description": "VesselEMS - 企业级管理系统前端",
   "type": "module",
   "scripts": {
     "dev": "vite",

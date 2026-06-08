@@ -19,7 +19,7 @@
         active-text-color="#ffffff"
         class="aside-menu"
       >
-        <el-menu-item index="/main/dashboard">
+        <el-menu-item index="/workspace/dashboard">
           <el-icon><DataBoard /></el-icon>
           <template #title>仪表盘</template>
         </el-menu-item>
@@ -29,12 +29,12 @@
             <el-icon><Setting /></el-icon>
             <span>系统管理</span>
           </template>
-          <el-menu-item v-if="hasMenu(21)" index="/main/system/users">用户管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(22)" index="/main/system/roles">角色管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(23)" index="/main/system/menus">菜单管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(24)" index="/main/system/permission">权限管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(25)" index="/main/system/dept">部门管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(26)" index="/main/system/config">系统配置</el-menu-item>
+          <el-menu-item v-if="hasMenu(21)" index="/workspace/users">用户管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(22)" index="/workspace/roles">角色管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(23)" index="/workspace/menus">菜单管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(24)" index="/workspace/permissions">权限管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(25)" index="/workspace/depts">部门管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(26)" index="/workspace/config">系统配置</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="rag" v-if="hasMenu(3)">
@@ -42,7 +42,7 @@
             <el-icon><Cpu /></el-icon>
             <span>RAG管理</span>
           </template>
-          <el-menu-item v-if="hasMenu(31)" index="/main/rag/documents">文档管理</el-menu-item>
+          <el-menu-item v-if="hasMenu(31)" index="/workspace/documents">文档管理</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="user">
@@ -50,7 +50,7 @@
             <el-icon><User /></el-icon>
             <span>用户中心</span>
           </template>
-          <el-menu-item index="/main/user/profile">用户个人中心</el-menu-item>
+          <el-menu-item index="/workspace/profile">用户个人中心</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -70,7 +70,7 @@
           </el-icon>
 
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/main/dashboard' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/workspace/dashboard' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item v-if="breadcrumbTitle">{{ breadcrumbTitle }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -135,7 +135,7 @@ const displayName = computed(() => {
 })
 
 function goProfile() {
-  router.push('/main/user/profile')
+  router.push('/workspace/profile')
 }
 
 function handleLogout() {
