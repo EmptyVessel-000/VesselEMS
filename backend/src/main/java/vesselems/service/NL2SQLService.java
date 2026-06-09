@@ -9,8 +9,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+<<<<<<< HEAD
 import java.util.UUID;
 import java.util.regex.Pattern;
+=======
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
 
 import javax.sql.DataSource;
 
@@ -26,10 +29,13 @@ import vesselems.repository.ModelRepository;
 @Service
 public class NL2SQLService {
 
+<<<<<<< HEAD
     private static final Pattern WRITE_SQL = Pattern.compile(
             "\\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\\b",
             Pattern.CASE_INSENSITIVE);
 
+=======
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
     private final DatasourceRepository dsRepo;
     private final ModelRepository modelRepo;
     private final DialogRepository dialogRepo;
@@ -48,20 +54,28 @@ public class NL2SQLService {
         this.llmService = llmService;
     }
 
+<<<<<<< HEAD
     public Map<String, Object> query(String sessionId, Long dsId, Long modelId, String question) {
+=======
+    public Map<String, Object> query(Long dsId, Long modelId, String question) {
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
         Datasource ds = dsRepo.findById(dsId)
                 .orElseThrow(() -> new IllegalArgumentException("数据源不存在"));
         Model model = modelRepo.findById(modelId)
                 .orElseThrow(() -> new IllegalArgumentException("模型不存在"));
 
+<<<<<<< HEAD
         if (sessionId == null || sessionId.isEmpty()) {
             sessionId = UUID.randomUUID().toString();
         }
 
+=======
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
         DataSource dataSource = dsManager.get(ds);
         List<Map<String, Object>> schema = schemaService.getSchema(dataSource);
         String schemaStr = schemaToString(schema);
 
+<<<<<<< HEAD
         List<Map<String, String>> messages = buildMessages(sessionId, schemaStr, question);
 
         String llmResponse = llmService.chatMulti(model, messages);
@@ -201,16 +215,57 @@ public class NL2SQLService {
         }
         messages.add(Map.of("role", "user", "content", question));
         return messages;
+=======
+        String prompt = buildPrompt(schemaStr, question);
+        String llmResponse = llmService.chat(model, prompt);
+        String sql = extractSQL(llmResponse);
+
+        List<Map<String, Object>> result = executeSQL(dataSource, sql);
+
+        Map<String, Object> content = new LinkedHashMap<>();
+        content.put("question", question);
+        content.put("sql", sql);
+        content.put("result", result);
+
+        Dialog dialog = new Dialog();
+        dialog.setDatasourceId(dsId);
+        dialog.setModelId(modelId);
+        dialog.setContent(toJsonStr(content));
+        dialog.setCreateTime(LocalDateTime.now());
+        dialogRepo.save(dialog);
+
+        content.put("dialogId", dialog.getId());
+        return content;
+    }
+
+    private String buildPrompt(String schemaStr, String question) {
+        return "你是一个SQL专家。根据以下数据库表结构，将用户的自然语言问题转换为SQL查询语句。\n"
+                + "只返回SQL语句，不要任何解释，不要markdown代码块标记。\n\n"
+                + "数据库表结构：\n" + schemaStr + "\n\n"
+                + "用户问题：" + question;
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
     }
 
     private String extractSQL(String llmResponse) {
         String sql = llmResponse.trim();
+<<<<<<< HEAD
         if (sql.startsWith("```sql"))
             sql = sql.substring(6);
         else if (sql.startsWith("```"))
             sql = sql.substring(3);
         if (sql.endsWith("```"))
             sql = sql.substring(0, sql.length() - 3);
+=======
+        if (sql.startsWith("```sql")) {
+            sql = sql.substring(6);
+        }
+        if (sql.startsWith("```")) {
+            sql = sql.substring(3);
+        }
+        if (sql.endsWith("```")) {
+            sql = sql.substring(0, sql.length() - 3);
+        }
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
         return sql.trim();
     }
 
@@ -234,6 +289,7 @@ public class NL2SQLService {
         return rows;
     }
 
+<<<<<<< HEAD
     private Dialog saveDialog(String sessionId, Long dsId, Long modelId, Map<String, Object> content) {
         Dialog d = new Dialog();
         d.setSessionId(sessionId);
@@ -244,6 +300,8 @@ public class NL2SQLService {
         return dialogRepo.save(d);
     }
 
+=======
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
     private String schemaToString(List<Map<String, Object>> schema) {
         StringBuilder sb = new StringBuilder();
         for (Map<String, Object> table : schema) {
@@ -258,6 +316,7 @@ public class NL2SQLService {
         return sb.toString();
     }
 
+<<<<<<< HEAD
     private String extractJsonField(String json, String key) {
         if (json == null)
             return "";
@@ -293,6 +352,8 @@ public class NL2SQLService {
         return json.substring(start, end).trim();
     }
 
+=======
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
     private String toJsonStr(Object obj) {
         if (obj == null)
             return "null";

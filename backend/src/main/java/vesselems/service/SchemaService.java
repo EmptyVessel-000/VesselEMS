@@ -45,13 +45,18 @@ public class SchemaService {
             while (rs.next()) {
                 Map<String, Object> col = new LinkedHashMap<>();
                 col.put("name", rs.getString("COLUMN_NAME"));
+<<<<<<< HEAD
                 col.put("type", mapTypeName(rs.getString("TYPE_NAME")));
+=======
+                col.put("type", rs.getString("TYPE_NAME"));
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
                 col.put("size", rs.getInt("COLUMN_SIZE"));
                 cols.add(col);
             }
         }
         return cols;
     }
+<<<<<<< HEAD
 
     private String mapTypeName(String type) {
         if (type == null) return "";
@@ -71,3 +76,6 @@ public class SchemaService {
         };
     }
 }
+=======
+}
+>>>>>>> 2609d393650989f717325435186f2346d621f4dc
