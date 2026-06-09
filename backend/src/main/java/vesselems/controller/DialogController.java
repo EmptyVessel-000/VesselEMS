@@ -33,7 +33,6 @@ public class DialogController {
         Long dsId = Long.valueOf(body.get("dsId").toString());
         Long modelId = Long.valueOf(body.get("modelId").toString());
         String question = (String) body.get("question");
-<<<<<<< HEAD
         String sessionId = (String) body.get("sessionId");
         return ApiResponse.success(nl2sqlService.query(sessionId, dsId, modelId, question));
     }
@@ -51,9 +50,6 @@ public class DialogController {
     @GetMapping("/session/{sessionId}")
     public ApiResponse<List<Dialog>> sessionDialogs(@PathVariable String sessionId) {
         return ApiResponse.success(nl2sqlService.getSessionDialogs(sessionId));
-=======
-        return ApiResponse.success(nl2sqlService.query(dsId, modelId, question));
->>>>>>> 2609d393650989f717325435186f2346d621f4dc
     }
 
     @GetMapping

@@ -17,12 +17,9 @@ public class Dialog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-<<<<<<< HEAD
     @Column(name = "session_id", length = 64)
     private String sessionId;
 
-=======
->>>>>>> 2609d393650989f717325435186f2346d621f4dc
     @Column(name = "datasource_id")
     private Long datasourceId;
 
@@ -46,7 +43,6 @@ public class Dialog {
         this.id = id;
     }
 
-<<<<<<< HEAD
     public String getSessionId() {
         return sessionId;
     }
@@ -55,8 +51,6 @@ public class Dialog {
         this.sessionId = sessionId;
     }
 
-=======
->>>>>>> 2609d393650989f717325435186f2346d621f4dc
     public Long getDatasourceId() {
         return datasourceId;
     }

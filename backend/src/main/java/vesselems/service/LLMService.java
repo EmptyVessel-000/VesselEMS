@@ -16,16 +16,11 @@ public class LLMService {
 
     private final RestTemplate rest = new RestTemplate();
 
-<<<<<<< HEAD
-=======
-    @SuppressWarnings("unchecked")
->>>>>>> 2609d393650989f717325435186f2346d621f4dc
     public String chat(Model model, String prompt) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", model.getModelId());
         body.put("messages", List.of(
                 Map.of("role", "user", "content", prompt)));
-<<<<<<< HEAD
         return doRequest(model, body);
     }
 
@@ -39,9 +34,6 @@ public class LLMService {
 
     @SuppressWarnings("unchecked")
     private String doRequest(Model model, Map<String, Object> body) {
-=======
-
->>>>>>> 2609d393650989f717325435186f2346d621f4dc
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + model.getApiKey());
         headers.set("Content-Type", "application/json");
