@@ -10,6 +10,7 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <el-button v-if="hasMenu(21) && hasPermission('user:create')" type="primary" :icon="Plus" @click="handleAdd">新增用户</el-button>
+          <el-button type="success" :icon="Upload" @click="importVisible = true">导入用户</el-button>
           <el-button v-if="hasMenu(21) && hasPermission('user:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length === 0" @click="handleBatchDelete">批量删除</el-button>
         </div>
         <div class="toolbar-right">
@@ -90,15 +91,49 @@
       <p class="batch-delete-text">确定要删除选中的 <strong>{{ selectedIds.length }}</strong> 个用户吗？</p>
       <template #footer><el-button @click="batchDeleteVisible=false">取消</el-button><el-button type="danger" :loading="batchLoading" @click="confirmBatchDelete">确定删除</el-button></template>
     </el-dialog>
+
+    <el-dialog v-model="importVisible" title="导入用户" width="500px" :close-on-click-modal="false" @close="resetImport">
+      <div style="margin-bottom:16px">
+        <el-upload
+          ref="uploadRef"
+          :auto-upload="false"
+          :limit="1"
+          accept=".csv,.xlsx,.xls"
+          :on-change="handleFileChange"
+          :on-remove="handleFileRemove"
+          drag
+        >
+          <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+          <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+          <template #tip>
+            <div class="el-upload__tip" style="margin-top:8px">
+              支持 .csv / .xlsx / .xls 格式 |
+              <el-button type="primary" link size="small" @click="downloadTemplate">下载模板</el-button>
+            </div>
+          </template>
+        </el-upload>
+      </div>
+      <div v-if="importResult" style="margin-top:12px">
+        <el-alert :title="`导入完成：成功 ${importResult.success} 条，失败 ${importResult.failed} 条`"
+          :type="importResult.failed > 0 ? 'warning' : 'success'" :closable="false" />
+        <ul v-if="importResult.errors && importResult.errors.length" style="margin-top:8px;font-size:12px;color:#ef4444;max-height:120px;overflow-y:auto">
+          <li v-for="(e, i) in importResult.errors" :key="i">{{ e }}</li>
+        </ul>
+      </div>
+      <template #footer>
+        <el-button @click="importVisible=false">关闭</el-button>
+        <el-button type="primary" :loading="importLoading" @click="handleImport">开始导入</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search, Refresh, Plus, Delete, Edit } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Delete, Edit, Upload, UploadFilled } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
-import { hasPermission, hasMenu, BUILT_IN_ROLES } from '../../stores/permissions.js'
+import { hasPermission, hasMenu } from '../../stores/permissions.js'
 
 const roleOptions = ref([])
 const deptOptions = ref([])
@@ -250,6 +285,45 @@ async function confirmBatchDelete() {
     ElMessage.success('批量删除完成'); selectedIds.value = []; batchDeleteVisible.value = false; await fetchUsers()
   } catch { ElMessage.error('批量删除失败') }
   finally { batchLoading.value = false }
+}
+
+const importVisible = ref(false), importLoading = ref(false), importResult = ref(null), uploadRef = ref(null)
+const importFile = ref(null)
+
+function handleFileChange(file) { importFile.value = file.raw }
+function handleFileRemove() { importFile.value = null }
+
+function resetImport() {
+  importFile.value = null
+  importResult.value = null
+  uploadRef.value?.clearFiles()
+}
+
+async function handleImport() {
+  if (!importFile.value) { ElMessage.warning('请选择文件'); return }
+  importLoading.value = true
+  importResult.value = null
+  try {
+    const fd = new FormData()
+    fd.append('file', importFile.value)
+    const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    // Use fetch natively so Content-Type is automatically multipart/form-data
+    const resp = await fetch('/api/users/import', { method: 'POST', headers, body: fd })
+    const json = await resp.json()
+    const d = json.data !== undefined ? json.data : json
+    importResult.value = d
+    if (d.success > 0) { await fetchUsers(); ElMessage.success(`成功导入 ${d.success} 条`) }
+    else ElMessage.warning('没有成功导入任何数据')
+  } catch { ElMessage.error('导入失败') }
+  finally { importLoading.value = false }
+}
+
+function downloadTemplate() {
+  const csv = '\uFEFF用户名,密码,邮箱,真实姓名,手机号\nzhangsan,123456,zs@example.com,张三,13800000001'
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob); a.download = 'user-import-template.csv'; a.click()
 }
 
 onMounted(async () => { await fetchRoles(); await fetchDepts(); await fetchUsers() })

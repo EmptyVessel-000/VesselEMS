@@ -19,9 +19,11 @@ import org.springframework.stereotype.Service;
 import vesselems.model.Datasource;
 import vesselems.model.Dialog;
 import vesselems.model.Model;
+import vesselems.model.Session;
 import vesselems.repository.DatasourceRepository;
 import vesselems.repository.DialogRepository;
 import vesselems.repository.ModelRepository;
+import vesselems.repository.SessionRepository;
 
 @Service
 public class NL2SQLService {
@@ -33,16 +35,18 @@ public class NL2SQLService {
     private final DatasourceRepository dsRepo;
     private final ModelRepository modelRepo;
     private final DialogRepository dialogRepo;
+    private final SessionRepository sessionRepo;
     private final DSManager dsManager;
     private final SchemaService schemaService;
     private final LLMService llmService;
 
     public NL2SQLService(DatasourceRepository dsRepo, ModelRepository modelRepo,
-            DialogRepository dialogRepo, DSManager dsManager,
-            SchemaService schemaService, LLMService llmService) {
+            DialogRepository dialogRepo, SessionRepository sessionRepo,
+            DSManager dsManager, SchemaService schemaService, LLMService llmService) {
         this.dsRepo = dsRepo;
         this.modelRepo = modelRepo;
         this.dialogRepo = dialogRepo;
+        this.sessionRepo = sessionRepo;
         this.dsManager = dsManager;
         this.schemaService = schemaService;
         this.llmService = llmService;
@@ -54,9 +58,24 @@ public class NL2SQLService {
         Model model = modelRepo.findById(modelId)
                 .orElseThrow(() -> new IllegalArgumentException("模型不存在"));
 
-        if (sessionId == null || sessionId.isEmpty()) {
+        boolean isNew = (sessionId == null || sessionId.isEmpty());
+        if (isNew) {
             sessionId = UUID.randomUUID().toString();
         }
+
+        // Save/update session tracking
+        Session session = sessionRepo.findBySessionId(sessionId).orElse(null);
+        if (session == null) {
+            session = new Session();
+            session.setSessionId(sessionId);
+            session.setDatasourceId(dsId);
+            session.setModelId(modelId);
+            session.setCreateTime(LocalDateTime.now());
+        } else {
+            session.setDatasourceId(dsId);
+            session.setModelId(modelId);
+        }
+        sessionRepo.save(session);
 
         DataSource dataSource = dsManager.get(ds);
         List<Map<String, Object>> schema = schemaService.getSchema(dataSource);
@@ -163,7 +182,8 @@ public class NL2SQLService {
         List<Map<String, Object>> list = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("sessionId", r[0]);
+            String sid = (String) r[0];
+            m.put("sessionId", sid);
             m.put("count", r[1]);
             m.put("firstTime", r[2] != null ? r[2].toString() : "");
             String firstQuestion = r[3] != null ? r[3].toString() : "";
@@ -172,9 +192,73 @@ public class NL2SQLService {
             } catch (Exception ignore) {
             }
             m.put("firstQuestion", firstQuestion);
+
+            // Attach dsId/modelId from session table
+            sessionRepo.findBySessionId(sid).ifPresent(s -> {
+                m.put("datasourceId", s.getDatasourceId());
+                m.put("modelId", s.getModelId());
+            });
             list.add(m);
         }
         return list;
+    }
+
+    public String summary(String sessionId, Long modelId) {
+        Model model = modelRepo.findById(modelId)
+                .orElseThrow(() -> new IllegalArgumentException("模型不存在"));
+        List<Dialog> dialogs = dialogRepo.findBySessionIdOrderByCreateTimeAsc(sessionId);
+        if (dialogs.isEmpty()) {
+            return "该会话无对话记录。";
+        }
+
+        StringBuilder conversation = new StringBuilder();
+        int idx = 0;
+        final int MAX_PROMPT = 15000;
+        for (Dialog d : dialogs) {
+            idx++;
+            String q = extractJsonField(d.getContent(), "question");
+            String s = extractJsonField(d.getContent(), "sql");
+            String err = extractJsonField(d.getContent(), "error");
+            String result = extractJsonField(d.getContent(), "result");
+
+            StringBuilder entry = new StringBuilder();
+            entry.append("## 查询 ").append(idx).append("\n");
+            entry.append("- 问题: ").append(q).append("\n");
+            entry.append("- SQL: ").append(s).append("\n");
+            if (err != null && !err.isEmpty()) {
+                entry.append("- 错误: ").append(err).append("\n");
+            }
+            if (result != null && !result.isEmpty() && !"null".equals(result)) {
+                // Limit per-entry result to 1500 chars to avoid token explosion
+                String truncated = result.length() > 1500
+                        ? result.substring(0, 1500) + "...(共约" + result.length() + "字符)"
+                        : result;
+                entry.append("- 查询结果数据:\n```json\n").append(truncated).append("\n```\n");
+            }
+            entry.append("\n");
+
+            // Global truncation: stop adding entries if total would exceed limit
+            if (conversation.length() + entry.length() > MAX_PROMPT) {
+                conversation.append("\n...(后续").append(dialogs.size() - idx + 1).append("轮对话已截断)\n");
+                break;
+            }
+            conversation.append(entry);
+        }
+
+        String prompt = """
+                你是数据分析助手。请根据以下SQL查询对话记录生成结构化的Markdown分析报告，必须包含以下部分：
+                1. **查询概要** — 用户问了什么类型的问题，涉及哪些业务领域
+                2. **涉及的表和字段** — 列出所有被查询的表及其关键字段
+                3. **关键SQL列表** — 逐条列出SQL语句
+                4. **数据结果分析** — 对每条查询返回的实际数据进行解读：数据量、关键指标、趋势、异常值等。如果数据中包含数值字段，请计算总数、平均值等统计指标。如果包含分类字段，请分析分布情况
+                5. **综合结论与建议** — 基于全部查询结果，给出总结性结论和可行性建议
+
+                对话记录：
+                %s
+
+                请生成Markdown报告：""".formatted(conversation.toString());
+
+        return llmService.chat(model, prompt);
     }
 
     public List<Dialog> getSessionDialogs(String sessionId) {

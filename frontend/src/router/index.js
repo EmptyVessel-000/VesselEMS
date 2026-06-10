@@ -11,7 +11,7 @@ const routes = [
   { path: '/login', name: 'Login', component: Login, meta: { title: '登录' } },
   { path: '/register', name: 'Register', component: Register, meta: { title: '注册' } },
   {
-    path: '/workspace', name: 'Main', component: Workspace, redirect: '/workspace/dashboard',
+    path: '/workspace', name: 'workspace', component: Workspace, redirect: '/workspace/dashboard',
     meta: { requiresAuth: true },
     children: workspaceRoutes
   }

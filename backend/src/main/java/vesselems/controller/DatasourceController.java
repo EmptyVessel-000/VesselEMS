@@ -54,7 +54,10 @@ public class DatasourceController {
     public ApiResponse<Datasource> update(@PathVariable Long id, @RequestBody Datasource ds) {
         Datasource exist = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("数据源不存在"));
         if (ds.getName() != null) exist.setName(ds.getName());
-        if (ds.getUrl() != null) exist.setUrl(ds.getUrl());
+        if (ds.getDbType() != null) exist.setDbType(ds.getDbType());
+        if (ds.getHost() != null) exist.setHost(ds.getHost());
+        if (ds.getPort() != null) exist.setPort(ds.getPort());
+        if (ds.getDatabaseName() != null) exist.setDatabaseName(ds.getDatabaseName());
         if (ds.getUsername() != null) exist.setUsername(ds.getUsername());
         if (ds.getPassword() != null) exist.setPassword(ds.getPassword());
         if (ds.getStatus() != null) exist.setStatus(ds.getStatus());

@@ -25,6 +25,7 @@ import vesselems.repository.UserRepository;
 import vesselems.repository.UserRoleRepository;
 import vesselems.security.JwtService;
 import vesselems.service.AuthService;
+import vesselems.service.MenuService;
 import vesselems.service.PermissionRoleService;
 import vesselems.service.PermissionService;
 import vesselems.service.RoleMenuService;
@@ -43,6 +44,7 @@ public class AuthController {
         private final PermissionService permissionService;
         private final MenuPermissionRepository menuPermissionRepository;
         private final org.springframework.security.authentication.AuthenticationManager authenticationManager;
+        private final MenuService menuService;
 
         public AuthController(AuthService authService,
                         JwtService jwtService,
@@ -53,7 +55,8 @@ public class AuthController {
                         PermissionRoleService permissionRoleService,
                         PermissionService permissionService,
                         MenuPermissionRepository menuPermissionRepository,
-                        org.springframework.security.authentication.AuthenticationManager authenticationManager) {
+                        org.springframework.security.authentication.AuthenticationManager authenticationManager,
+                        MenuService menuService) {
                 this.authService = authService;
                 this.jwtService = jwtService;
                 this.userRepository = userRepository;
@@ -64,6 +67,7 @@ public class AuthController {
                 this.permissionService = permissionService;
                 this.menuPermissionRepository = menuPermissionRepository;
                 this.authenticationManager = authenticationManager;
+                this.menuService = menuService;
         }
 
         @PostMapping("/register")
@@ -125,47 +129,46 @@ public class AuthController {
                                 .filter(r -> r != null)
                                 .anyMatch(r -> "super_admin".equals(r.getRoleName()));
 
+                if (isSuperAdmin) {
+                        return ApiResponse.success(java.util.Map.of(
+                                        "menus", Set.of(-1L),
+                                        "permissions", Set.of("*"),
+                                        "menuTree", menuService.listEnabled()));
+                }
+
                 Set<Long> menuIds = new LinkedHashSet<>();
                 Set<String> permCodes = new LinkedHashSet<>();
+                Set<Long> permissionIds = new LinkedHashSet<>();
 
-                if (isSuperAdmin) {
-                        menuIds.add(-1L);
-                        permCodes.add("*");
-                } else {
-                        Set<Long> permissionIds = new LinkedHashSet<>();
-                        for (var ur : userRoleRepository.findByUserId(userId)) {
-                                Role role = roleRepository.findById(ur.getRoleId()).orElse(null);
-                                if (role == null || (role.getStatus() != null && role.getStatus() != 1))
-                                        continue;
-                                roleMenuService.findByRoleId(ur.getRoleId())
-                                                .forEach(rm -> menuIds.add(rm.getMenuId()));
-                                permissionRoleService.findByRoleId(ur.getRoleId())
-                                                .forEach(rp -> permissionIds.add(rp.getPermissionId()));
-                        }
+                for (var ur : userRoleRepository.findByUserId(userId)) {
+                        Role role = roleRepository.findById(ur.getRoleId()).orElse(null);
+                        if (role == null || (role.getStatus() != null && role.getStatus() != 1))
+                                continue;
+                        roleMenuService.findByRoleId(ur.getRoleId())
+                                        .forEach(rm -> menuIds.add(rm.getMenuId()));
+                        permissionRoleService.findByRoleId(ur.getRoleId())
+                                        .forEach(rp -> permissionIds.add(rp.getPermissionId()));
+                }
 
-                        // 构建 menu_perm 反向索引：permissionId → 所属 menuId 集合
-                        java.util.Map<Long, Set<Long>> permMenuMap = new java.util.LinkedHashMap<>();
-                        for (var mp : menuPermissionRepository.findAll()) {
-                                permMenuMap.computeIfAbsent(mp.getPermissionId(), k -> new LinkedHashSet<>())
-                                                .add(mp.getMenuId());
-                        }
+                java.util.Map<Long, Set<Long>> permMenuMap = new java.util.LinkedHashMap<>();
+                for (var mp : menuPermissionRepository.findAll()) {
+                        permMenuMap.computeIfAbsent(mp.getPermissionId(), k -> new LinkedHashSet<>())
+                                        .add(mp.getMenuId());
+                }
 
-                        for (Long permId : permissionIds) {
-                                try {
-                                        String code = permissionService.getPermissionById(permId).getPermissionCode();
-                                        Set<Long> requiredMenus = permMenuMap.get(permId);
-                                        if (requiredMenus == null || requiredMenus.isEmpty()) {
-                                                // 无菜单关联的权限：直接放行
+                for (Long permId : permissionIds) {
+                        try {
+                                String code = permissionService.getPermissionById(permId).getPermissionCode();
+                                Set<Long> requiredMenus = permMenuMap.get(permId);
+                                if (requiredMenus == null || requiredMenus.isEmpty()) {
+                                        permCodes.add(code);
+                                } else {
+                                        requiredMenus.retainAll(menuIds);
+                                        if (!requiredMenus.isEmpty()) {
                                                 permCodes.add(code);
-                                        } else {
-                                                // 有菜单关联的权限：必须拥有对应菜单才放行
-                                                requiredMenus.retainAll(menuIds);
-                                                if (!requiredMenus.isEmpty()) {
-                                                        permCodes.add(code);
-                                                }
                                         }
-                                } catch (IllegalArgumentException ignored) {
                                 }
+                        } catch (IllegalArgumentException ignored) {
                         }
                 }
 

@@ -7,8 +7,18 @@
       <el-table :data="pagedData" v-loading="loading" stripe border style="width: 100%">
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="name" label="数据库名" width="140" />
-        <el-table-column prop="url" label="连接地址" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="username" label="用户名" width="100" />
+        <el-table-column label="数据库类型" width="110" align="center">
+          <template #default="{ row }">
+            <el-tag size="small">{{ row.dbType || '-' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="主机" min-width="160" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ row.host }}{{ row.port ? ':' + row.port : '' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="databaseName" label="数据库" width="130" />
+        <el-table-column prop="username" label="用户" width="100" />
         <el-table-column label="状态" width="75" align="center">
           <template #default="{ row }">
             <el-switch v-model="row.status" :active-value="1" :inactive-value="0" @change="handleStatusToggle(row)" />
@@ -34,11 +44,22 @@
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑数据源' : '新增数据源'" width="520px" @close="resetForm">
-      <el-form ref="fRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="名称" prop="name"><el-input v-model="form.name" /></el-form-item>
-        <el-form-item label="连接地址" prop="url"><el-input v-model="form.url" placeholder="jdbc:mysql://host:port/db" /></el-form-item>
+      <el-form ref="fRef" :model="form" :rules="rules" label-width="90px">
+        <el-form-item label="名称" prop="name"><el-input v-model="form.name" placeholder="给数据源起个名字" /></el-form-item>
+        <el-form-item label="数据库类型" prop="dbType">
+          <el-select v-model="form.dbType" placeholder="请选择" style="width:100%">
+            <el-option label="MySQL" value="mysql" />
+            <el-option label="PostgreSQL" value="postgresql" />
+            <el-option label="Oracle" value="oracle" />
+            <el-option label="SQL Server" value="sqlserver" />
+            <el-option label="MariaDB" value="mariadb" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="主机名/IP" prop="host"><el-input v-model="form.host" placeholder="localhost 或 IP 地址" /></el-form-item>
+        <el-form-item label="端口"><el-input-number v-model="form.port" :min="1" :max="65535" style="width:100%" /></el-form-item>
+        <el-form-item label="数据库名"><el-input v-model="form.databaseName" placeholder="数据库名称" /></el-form-item>
         <el-form-item label="用户名"><el-input v-model="form.username" /></el-form-item>
-        <el-form-item label="密码"><el-input v-model="form.password" type="password" show-password /></el-form-item>
+        <el-form-item label="密码"><el-input v-model="form.password" type="password" show-password placeholder="留空则不修改密码" /></el-form-item>
         <el-form-item label="状态"><el-switch v-model="form.status" :active-value="1" :inactive-value="0" /></el-form-item>
       </el-form>
       <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button></template>
@@ -63,6 +84,8 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Edit, Delete, Connection, DataBoard } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
+
+const defaultPortMap = { mysql: 3306, postgresql: 5432, oracle: 1521, sqlserver: 1433, mariadb: 3306 }
 
 const list = ref([]), loading = ref(false)
 const page = ref(1), size = ref(10)
@@ -98,21 +121,48 @@ async function handleStatusToggle(row) {
 }
 
 const dialogVisible = ref(false), isEdit = ref(false), editId = ref(null), submitting = ref(false), fRef = ref(null)
-const form = reactive({ name: '', url: '', username: '', password: '', status: 1 })
-const rules = { name: [{ required: true, message: '请输入名称' }], url: [{ required: true, message: '请输入连接地址' }] }
+const form = reactive({ name: '', dbType: 'mysql', host: '', port: 3306, databaseName: '', username: '', password: '', status: 1 })
+const rules = {
+  name: [{ required: true, message: '请输入名称' }],
+  dbType: [{ required: true, message: '请选择数据库类型' }],
+  host: [{ required: true, message: '请输入主机名/IP' }],
+}
 
 function handleAdd() { isEdit.value = false; editId.value = null; resetRaw(); dialogVisible.value = true }
-function handleEdit(row) { isEdit.value = true; editId.value = row.id; form.name = row.name; form.url = row.url; form.username = row.username; form.password = row.password; form.status = row.status; dialogVisible.value = true }
-function resetRaw() { form.name = ''; form.url = ''; form.username = ''; form.password = ''; form.status = 1 }
+function handleEdit(row) {
+  isEdit.value = true; editId.value = row.id
+  form.name = row.name
+  form.dbType = row.dbType || 'mysql'
+  form.host = row.host || ''
+  form.port = row.port || defaultPortMap[form.dbType] || 3306
+  form.databaseName = row.databaseName || ''
+  form.username = row.username || ''
+  form.password = ''
+  form.status = row.status
+  dialogVisible.value = true
+}
+function resetRaw() { form.name = ''; form.dbType = 'mysql'; form.host = ''; form.port = 3306; form.databaseName = ''; form.username = ''; form.password = ''; form.status = 1 }
 function resetForm() { resetRaw(); fRef.value?.resetFields() }
+
+// Set default port when dbType changes
+function onDbTypeChange(val) {
+  if (!isEdit.value) {
+    form.port = defaultPortMap[val] || 3306
+  }
+}
 
 async function handleSubmit() {
   if (!fRef.value) return
   try { await fRef.value.validate() } catch { return }
   submitting.value = true
   try {
-    if (isEdit.value) { await request.put(`/api/ds/${editId.value}`, { ...form }); ElMessage.success('已修改') }
-    else { await request.post('/api/ds', { ...form }); ElMessage.success('已新增') }
+    const payload = { ...form }
+    // Don't send password if empty in edit mode
+    if (isEdit.value && !payload.password) {
+      delete payload.password
+    }
+    if (isEdit.value) { await request.put(`/api/ds/${editId.value}`, payload); ElMessage.success('已修改') }
+    else { await request.post('/api/ds', payload); ElMessage.success('已新增') }
     dialogVisible.value = false; resetRaw(); await fetch()
   } catch {} finally { submitting.value = false }
 }

@@ -2,8 +2,7 @@ import { reactive } from 'vue'
 import request from '../api/request.js'
 
 export const SUPER_ADMIN_ROLE = 'super_admin'
-export const NEW_USER_ROLE = 'new_user'
-export const BUILT_IN_ROLES = [SUPER_ADMIN_ROLE, NEW_USER_ROLE]
+export const BUILT_IN_ROLES = [SUPER_ADMIN_ROLE]
 
 export const permissionStore = reactive({
   menus: [],

@@ -3,12 +3,12 @@
     <!-- 左侧会话列表 -->
     <div class="session-panel">
       <div class="session-header">
-        <el-button type="primary" size="small" :icon="Plus" @click="newSession">新会话</el-button>
+        <el-button type="primary" :icon="Plus" @click="newSession">新会话</el-button>
       </div>
       <div class="session-list" v-loading="sessionLoading">
         <div v-for="s in sessions" :key="s.sessionId" class="session-item"
              :class="{ active: s.sessionId === currentSessionId }"
-             @click="selectSession(s.sessionId)">
+             @click="selectSession(s)">
           <div class="session-title">{{ s.firstQuestion || '新会话' }}</div>
           <div class="session-meta">{{ s.count }} 条 · {{ fmtTime(s.firstTime) }}</div>
         </div>
@@ -20,16 +20,27 @@
     <div class="chat-panel">
       <!-- 顶部选择器 -->
       <div class="chat-top">
-        <el-select v-model="dsId" placeholder="数据源" size="small" style="width:160px">
+        <el-select v-model="dsId" placeholder="数据源" size="large" style="width:240px">
           <el-option v-for="d in dsList" :key="d.id" :label="d.name" :value="d.id" />
         </el-select>
-        <el-select v-model="modelId" placeholder="模型" size="small" style="width:160px">
+        <el-select v-model="modelId" placeholder="模型" size="large" style="width:240px">
           <el-option v-for="m in modelList" :key="m.id" :label="m.name" :value="m.id" />
         </el-select>
+        <el-button v-if="messages.length > 0 && currentSessionId"
+          size="small" type="warning" :icon="Document" @click="exportSummary">
+          导出报告
+        </el-button>
       </div>
 
       <!-- 消息区域 -->
       <div class="chat-messages" ref="msgBox">
+        <div v-if="messages.length === 0" class="chat-empty">
+          <div class="empty-icon">
+            <el-icon :size="48"><ChatDotSquare /></el-icon>
+          </div>
+          <h2 class="empty-title">请开始您的任务</h2>
+          <p class="empty-desc">选择一个数据源和模型，输入自然语言问题进行查询</p>
+        </div>
         <div v-for="(m, idx) in messages" :key="idx" class="msg-block">
           <div class="msg-user">{{ m.question }}</div>
           <div class="msg-sql" v-if="m.sql">
@@ -64,7 +75,8 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Download, Check, Promotion, Loading } from '@element-plus/icons-vue'
+import { Plus, Download, Check, Promotion, Loading, Document, ChatDotSquare } from '@element-plus/icons-vue'
+import axios from 'axios'
 import request from '../../api/request.js'
 
 const dsList = ref([]), modelList = ref([])
@@ -92,15 +104,20 @@ function fmtTime(t) {
 
 function newSession() {
   currentSessionId.value = null
+  dsId.value = null
+  modelId.value = null
   messages.value = []
   scrollBottom()
 }
 
-async function selectSession(id) {
-  currentSessionId.value = id
+async function selectSession(s) {
+  currentSessionId.value = s.sessionId
+  // Restore dsId/modelId from session table
+  if (s.datasourceId) dsId.value = s.datasourceId
+  if (s.modelId) modelId.value = s.modelId
   messages.value = []
   try {
-    const dialogs = (await request.get(`/api/dialog/session/${id}`)) || []
+    const dialogs = (await request.get(`/api/dialog/session/${s.sessionId}`)) || []
     messages.value = dialogs.map(d => {
       let c = {}
       try { c = JSON.parse(d.content || '{}') } catch {}
@@ -154,6 +171,37 @@ function downloadResult(m) {
   a.href = URL.createObjectURL(blob); a.download = 'result.json'; a.click()
 }
 
+async function exportSummary() {
+  if (!currentSessionId.value || !modelId.value) {
+    ElMessage.warning('请先选择一个模型'); return
+  }
+  const token = localStorage.getItem('token')
+  const instance = axios.create({
+    timeout: 180000,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
+  })
+  try {
+    ElMessage.info('正在生成报告，可能需要较长时间...')
+    const resp = await instance.post('/api/dialog/summary', {
+      sessionId: currentSessionId.value,
+      modelId: modelId.value
+    })
+    let markdown = resp.data
+    if (resp.data && typeof resp.data === 'object' && 'data' in resp.data) {
+      markdown = resp.data.data
+    }
+    const blob = new Blob([markdown], { type: 'text/markdown' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob); a.download = 'analysis-report.md'; a.click()
+    ElMessage.success('报告已下载')
+  } catch {
+    ElMessage.error('导出失败，请重试')
+  }
+}
+
 function scrollBottom() {
   nextTick(() => {
     const el = msgBox.value
@@ -175,8 +223,12 @@ onMounted(() => { fetchDs(); fetchModel(); fetchSessions() })
 .session-meta { font-size: 11px; color: #9ca3af; margin-top: 2px; }
 
 .chat-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f8fafc; }
-.chat-top { padding: 8px 12px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; gap: 8px; }
-.chat-messages { flex: 1; overflow-y: auto; padding: 12px; }
+.chat-top { padding: 10px 16px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; gap: 12px; align-items: center; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px; }
+.chat-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #9ca3af; }
+.empty-icon { color: #cbd5e1; margin-bottom: 16px; }
+.empty-title { margin: 0; font-size: 22px; font-weight: 600; color: #64748b; }
+.empty-desc { margin-top: 8px; font-size: 14px; }
 .msg-block { margin-bottom: 16px; }
 .msg-user { background: #2563eb; color: #fff; padding: 8px 12px; border-radius: 8px; display: inline-block; max-width: 80%; font-size: 14px; }
 .msg-sql { margin-top: 6px; background: #1e293b; color: #e2e8f0; padding: 8px 12px; border-radius: 6px; font-size: 13px; overflow-x: auto; }
@@ -186,5 +238,5 @@ onMounted(() => { fetchDs(); fetchModel(); fetchSessions() })
 .msg-actions { margin-top: 6px; }
 .msg-loading { padding: 8px 16px; color: #6b7280; font-size: 14px; }
 
-.chat-input { padding: 10px 12px; background: #fff; border-top: 1px solid #e5e7eb; display: flex; align-items: flex-end; }
+.chat-input { padding: 10px 16px; background: #fff; border-top: 1px solid #e5e7eb; display: flex; align-items: flex-end; }
 </style>

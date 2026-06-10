@@ -20,8 +20,17 @@ public class Datasource {
     @Column(nullable = false, length = 128)
     private String name;
 
-    @Column(nullable = false, length = 512)
-    private String url;
+    @Column(name = "db_type", length = 32)
+    private String dbType;
+
+    @Column(length = 256)
+    private String host;
+
+    @Column
+    private Integer port;
+
+    @Column(name = "database_name", length = 256)
+    private String databaseName;
 
     @Column(length = 128)
     private String username;
@@ -54,12 +63,36 @@ public class Datasource {
         this.name = name;
     }
 
-    public String getUrl() {
-        return url;
+    public String getDbType() {
+        return dbType;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setDbType(String dbType) {
+        this.dbType = dbType;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
+    }
+
+    public void setDatabaseName(String databaseName) {
+        this.databaseName = databaseName;
     }
 
     public String getUsername() {

@@ -67,4 +67,11 @@ public class DialogController {
         repo.deleteById(id);
         return ApiResponse.success(null);
     }
+
+    @PostMapping("/summary")
+    public ApiResponse<String> summary(@RequestBody Map<String, Object> body) {
+        String sessionId = (String) body.get("sessionId");
+        Long modelId = Long.valueOf(body.get("modelId").toString());
+        return ApiResponse.success(nl2sqlService.summary(sessionId, modelId));
+    }
 }

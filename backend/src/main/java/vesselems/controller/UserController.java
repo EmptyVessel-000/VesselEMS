@@ -1,6 +1,7 @@
 package vesselems.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,7 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 import vesselems.common.ApiResponse;
@@ -72,5 +75,10 @@ public class UserController {
     public ApiResponse<Void> changePassword(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request) {
         userService.changePassword(id, request.getPassword());
         return ApiResponse.success(null);
+    }
+
+    @PostMapping("/import")
+    public ApiResponse<Map<String, Object>> importUsers(@RequestParam("file") MultipartFile file) {
+        return ApiResponse.success(userService.importUsers(file));
     }
 }

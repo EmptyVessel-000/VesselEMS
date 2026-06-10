@@ -4,7 +4,7 @@ import router from '../router/index.js'
 
 const request = axios.create({
   baseURL: '',
-  timeout: 10000,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' }
 })
 

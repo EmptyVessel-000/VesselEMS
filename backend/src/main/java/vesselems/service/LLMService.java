@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -14,13 +15,22 @@ import vesselems.model.Model;
 @Service
 public class LLMService {
 
-    private final RestTemplate rest = new RestTemplate();
+    private final RestTemplate rest;
+
+    public LLMService() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10000);
+        factory.setReadTimeout(120000);
+        this.rest = new RestTemplate(factory);
+    }
 
     public String chat(Model model, String prompt) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", model.getModelId());
         body.put("messages", List.of(
                 Map.of("role", "user", "content", prompt)));
+        body.put("temperature", 0.5);
+        body.put("max_tokens", 3000);
         return doRequest(model, body);
     }
 
@@ -29,6 +39,8 @@ public class LLMService {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", model.getModelId());
         body.put("messages", messages);
+        body.put("temperature", 0.1);
+        body.put("max_tokens", 300);
         return doRequest(model, body);
     }
 
