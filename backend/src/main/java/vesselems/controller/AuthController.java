@@ -133,7 +133,7 @@ public class AuthController {
                         return ApiResponse.success(java.util.Map.of(
                                         "menus", Set.of(-1L),
                                         "permissions", Set.of("*"),
-                                        "menuTree", menuService.listEnabled()));
+                                        "menuTree", menuService.getTree()));
                 }
 
                 Set<Long> menuIds = new LinkedHashSet<>();
@@ -174,6 +174,7 @@ public class AuthController {
 
                 return ApiResponse.success(java.util.Map.of(
                                 "menus", menuIds,
-                                "permissions", permCodes));
+                                "permissions", permCodes,
+                                "menuTree", menuService.getTree()));
         }
 }

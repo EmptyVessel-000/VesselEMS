@@ -59,4 +59,15 @@ public class MenuController {
         menuService.deleteMenu(id);
         return ApiResponse.success(null);
     }
+
+    @GetMapping("/tree")
+    public ApiResponse<List<Menu>> tree() {
+        return ApiResponse.success(menuService.getTree());
+    }
+
+    @PostMapping("/{id}/move")
+    public ApiResponse<Void> move(@PathVariable Long id, @RequestParam String direction) {
+        menuService.moveMenu(id, direction);
+        return ApiResponse.success(null);
+    }
 }

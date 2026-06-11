@@ -1,6 +1,8 @@
 package vesselems.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "menu")
@@ -37,12 +40,6 @@ public class Menu {
 
     @Column(name = "visible")
     private Integer visible;
-
-    @Column(name = "is_frame")
-    private Integer isFrame;
-
-    @Column(name = "permission", length = 128)
-    private String permission;
 
     @Column(name = "sort_order")
     private Integer sortOrder;
@@ -123,22 +120,6 @@ public class Menu {
         this.visible = visible;
     }
 
-    public Integer getIsFrame() {
-        return isFrame;
-    }
-
-    public void setIsFrame(Integer isFrame) {
-        this.isFrame = isFrame;
-    }
-
-    public String getPermission() {
-        return permission;
-    }
-
-    public void setPermission(String permission) {
-        this.permission = permission;
-    }
-
     public Integer getSortOrder() {
         return sortOrder;
     }
@@ -169,5 +150,19 @@ public class Menu {
 
     public void setModifyTime(LocalDateTime modifyTime) {
         this.modifyTime = modifyTime;
+    }
+
+    @Transient
+    private List<Menu> children;
+
+    public List<Menu> getChildren() {
+        if (children == null) {
+            children = new ArrayList<>();
+        }
+        return children;
+    }
+
+    public void setChildren(List<Menu> children) {
+        this.children = children;
     }
 }

@@ -19,50 +19,40 @@
         active-text-color="#ffffff"
         class="aside-menu"
       >
-        <el-menu-item index="/workspace/dashboard">
-          <el-icon><DataBoard /></el-icon>
-          <template #title>仪表盘</template>
-        </el-menu-item>
+        <template v-for="node in visibleMenus" :key="node.id">
+          <!-- 页面 -->
+          <el-menu-item v-if="node.menuType === 1" :index="resolvePath(node)">
+            <el-icon v-if="node.menuIcon">
+              <component :is="resolveIcon(node.menuIcon)" />
+            </el-icon>
+            <template #title>{{ node.menuName }}</template>
+          </el-menu-item>
 
-        <el-sub-menu index="system" v-if="hasMenu(2)">
-          <template #title>
-            <el-icon><Setting /></el-icon>
-            <span>系统管理</span>
-          </template>
-          <el-menu-item v-if="hasMenu(21)" index="/workspace/users">用户管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(22)" index="/workspace/roles">角色管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(23)" index="/workspace/menus">菜单管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(24)" index="/workspace/permissions">权限管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(25)" index="/workspace/depts">部门管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(26)" index="/workspace/config">系统配置</el-menu-item>
-        </el-sub-menu>
-
-        <el-sub-menu index="nl2sql" v-if="hasMenu(4)">
-          <template #title>
-            <el-icon><ChatDotRound /></el-icon>
-            <span>NL2SQL分析</span>
-          </template>
-          <el-menu-item v-if="hasMenu(41)" index="/workspace/datasources">数据源管理</el-menu-item>
-          <el-menu-item v-if="hasMenu(42)" index="/workspace/nlquery">自然语言查询</el-menu-item>
-          <el-menu-item v-if="hasMenu(43)" index="/workspace/dialogs">查询历史</el-menu-item>
-          <el-menu-item v-if="hasMenu(44)" index="/workspace/models">模型配置</el-menu-item>
-        </el-sub-menu>
-
-        <el-sub-menu index="rag" v-if="hasMenu(3)">
-          <template #title>
-            <el-icon><Cpu /></el-icon>
-            <span>RAG管理</span>
-          </template>
-          <el-menu-item v-if="hasMenu(31)" index="/workspace/documents">文档管理</el-menu-item>
-        </el-sub-menu>
-
-        <el-sub-menu index="user">
-          <template #title>
-            <el-icon><User /></el-icon>
-            <span>用户中心</span>
-          </template>
-          <el-menu-item index="/workspace/profile">用户个人中心</el-menu-item>
-        </el-sub-menu>
+          <!-- 分组 -->
+          <el-sub-menu v-else-if="node.menuType === 2 && hasVisibleChildren(node)" :index="String(node.id)">
+            <template #title>
+              <el-icon v-if="node.menuIcon">
+                <component :is="resolveIcon(node.menuIcon)" />
+              </el-icon>
+              <span>{{ node.menuName }}</span>
+            </template>
+            <template v-for="child in node.children" :key="child.id">
+              <!-- 二级：页面 -->
+              <el-menu-item v-if="child.menuType === 1" :index="resolvePath(child)">
+                {{ child.menuName }}
+              </el-menu-item>
+              <!-- 二级：分组（三级） -->
+              <el-sub-menu v-else-if="child.menuType === 2 && hasVisibleChildren(child)" :index="String(child.id)">
+                <template #title>{{ child.menuName }}</template>
+                <el-menu-item v-for="sub in child.children" :key="sub.id"
+                  v-show="sub.visible === 1 && hasMenu(sub.id)"
+                  :index="resolvePath(sub)">
+                  {{ sub.menuName }}
+                </el-menu-item>
+              </el-sub-menu>
+            </template>
+          </el-sub-menu>
+        </template>
       </el-menu>
     </el-aside>
 
@@ -81,7 +71,7 @@
           </el-icon>
 
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/workspace/dashboard' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="dashboardPath">首页</el-breadcrumb-item>
             <el-breadcrumb-item v-if="breadcrumbTitle">{{ breadcrumbTitle }}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -129,7 +119,7 @@ import {
   UserFilled, ArrowDown, SwitchButton, ChatDotRound
 } from '@element-plus/icons-vue'
 import { userStore, logout } from '../stores/user.js'
-import { hasPermission, hasMenu, loadPermissions, permissionStore } from '../stores/permissions.js'
+import { hasMenu, loadPermissions, permissionStore, getDashboardPath } from '../stores/permissions.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -144,6 +134,57 @@ const breadcrumbTitle = computed(() => {
 const displayName = computed(() => {
   return userStore.user?.username || ''
 })
+
+const dashboardPath = computed(() => getDashboardPath())
+
+// 图标名到组件的映射（仅常用图标，可扩展）
+const iconMap = {
+  'Ship': Ship,
+  'DataBoard': DataBoard,
+  'Setting': Setting,
+  'Cpu': Cpu,
+  'User': User,
+  'ChatDotRound': ChatDotRound
+}
+
+function resolveIcon(iconName) {
+  return iconMap[iconName] || null
+}
+
+// 可见的 workspace 子菜单（已过滤 visible + 权限）
+const visibleMenus = computed(() => {
+  const wsNode = permissionStore.menuTree.find(n => n.menuComponent === 'workspace')
+  const children = wsNode?.children || []
+  if (!children.length) return []
+
+  function filterVisible(list) {
+    if (!list) return []
+    return list
+      .filter(n => n.visible === 1 && hasMenu(n.id))
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .map(n => ({
+        ...n,
+        children: n.children ? filterVisible(n.children) : []
+      }))
+      .filter(n => {
+        if (n.menuType === 1) return true
+        if (n.menuType === 2) return n.children && n.children.length > 0
+        return false
+      })
+  }
+
+  return filterVisible(children)
+})
+
+function hasVisibleChildren(node) {
+  if (!node.children) return false
+  return node.children.some(c => c.visible === 1 && hasMenu(c.id))
+}
+
+function resolvePath(node) {
+  if (!node.menuPath) return '/workspace'
+  return `/workspace/${node.menuPath}`
+}
 
 function goProfile() {
   router.push('/workspace/profile')

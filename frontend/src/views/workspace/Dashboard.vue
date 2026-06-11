@@ -65,20 +65,6 @@
       </el-col>
     </el-row>
 
-    <!-- 快速入口 -->
-    <el-card class="quick-entry" shadow="hover">
-      <template #header>
-        <span>快速入口</span>
-      </template>
-      <el-row :gutter="16">
-        <el-col :xs="12" :sm="6" v-for="item in quickLinks" :key="item.path">
-          <router-link :to="item.path" class="quick-link-item">
-            <el-icon :size="22"><component :is="item.icon" /></el-icon>
-            <span>{{ item.label }}</span>
-          </router-link>
-        </el-col>
-      </el-row>
-    </el-card>
   </div>
 </template>
 
@@ -106,12 +92,6 @@ async function fetchStats() {
     // 后端未启动时静默失败，保留默认值
   }
 }
-
-const quickLinks = [
-  { path: '/workspace/users', label: '用户管理', icon: 'UserFilled' },
-  { path: '/workspace/documents', label: '文档管理', icon: 'Document' },
-  { path: '/workspace/profile', label: '个人中心', icon: 'User' }
-]
 
 onMounted(() => {
   fetchStats()
@@ -179,25 +159,4 @@ onMounted(() => {
   color: #1f2937;
 }
 
-/* 快速入口 */
-.quick-entry {
-  /* no extra margin */
-}
-
-.quick-link-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  color: #374151;
-  text-decoration: none;
-  transition: all 0.2s;
-  font-size: 14px;
-}
-
-.quick-link-item:hover {
-  background: #f1f5f9;
-  color: #2563eb;
-}
 </style>
