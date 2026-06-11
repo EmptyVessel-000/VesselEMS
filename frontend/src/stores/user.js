@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import request from '../api/request.js'
+import { login as authLogin, getCurrentUser } from '../api/auth.js'
 
 export const userStore = reactive({
   user: null,
@@ -15,7 +15,7 @@ export function setToken(token) {
 }
 
 export async function loginUser(email, password) {
-  const res = await request.post('/api/auth/login', { email, password })
+  const res = await authLogin(email, password)
   if (res.token) setToken(res.token)
   if (res.user) userStore.user = res.user
   else userStore.user = res
@@ -24,7 +24,7 @@ export async function loginUser(email, password) {
 }
 
 export async function checkAuth() {
-  const res = await request.get('/api/auth/me')
+  const res = await getCurrentUser()
   userStore.user = res
   userStore.isAuthenticated = true
   return res

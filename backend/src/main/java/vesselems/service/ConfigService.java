@@ -60,4 +60,8 @@ public class ConfigService {
         }
         configRepository.deleteById(id);
     }
+
+    public long count() {
+        return configRepository.count();
+    }
 }

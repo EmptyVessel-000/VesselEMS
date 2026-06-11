@@ -53,6 +53,9 @@ public class Menu {
     @Column(name = "modify_time")
     private LocalDateTime modifyTime;
 
+    @Transient
+    private List<Menu> children;
+
     public Menu() {
     }
 
@@ -151,9 +154,6 @@ public class Menu {
     public void setModifyTime(LocalDateTime modifyTime) {
         this.modifyTime = modifyTime;
     }
-
-    @Transient
-    private List<Menu> children;
 
     public List<Menu> getChildren() {
         if (children == null) {

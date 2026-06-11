@@ -13,18 +13,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import vesselems.common.ApiResponse;
 import vesselems.model.Dialog;
-import vesselems.repository.DialogRepository;
+import vesselems.service.DialogService;
 import vesselems.service.NL2SQLService;
 
 @RestController
 @RequestMapping("/api/dialog")
 public class DialogController {
 
-    private final DialogRepository repo;
+    private final DialogService dialogService;
     private final NL2SQLService nl2sqlService;
 
-    public DialogController(DialogRepository repo, NL2SQLService nl2sqlService) {
-        this.repo = repo;
+    public DialogController(DialogService dialogService, NL2SQLService nl2sqlService) {
+        this.dialogService = dialogService;
         this.nl2sqlService = nl2sqlService;
     }
 
@@ -54,17 +54,17 @@ public class DialogController {
 
     @GetMapping
     public ApiResponse<List<Dialog>> list() {
-        return ApiResponse.success(repo.findAll());
+        return ApiResponse.success(dialogService.listDialogs());
     }
 
     @GetMapping("/{id}")
     public ApiResponse<Dialog> get(@PathVariable Long id) {
-        return ApiResponse.success(repo.findById(id).orElseThrow(() -> new IllegalArgumentException("记录不存在")));
+        return ApiResponse.success(dialogService.getById(id));
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
-        repo.deleteById(id);
+        dialogService.deleteById(id);
         return ApiResponse.success(null);
     }
 

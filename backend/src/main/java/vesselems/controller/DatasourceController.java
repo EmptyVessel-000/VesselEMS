@@ -1,6 +1,5 @@
 package vesselems.controller;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -15,72 +14,62 @@ import org.springframework.web.bind.annotation.RestController;
 
 import vesselems.common.ApiResponse;
 import vesselems.model.Datasource;
-import vesselems.repository.DatasourceRepository;
 import vesselems.service.DSManager;
+import vesselems.service.DatasourceService;
 import vesselems.service.SchemaService;
 
 @RestController
 @RequestMapping("/api/ds")
 public class DatasourceController {
 
-    private final DatasourceRepository repo;
+    private final DatasourceService datasourceService;
     private final DSManager dsManager;
     private final SchemaService schemaService;
 
-    public DatasourceController(DatasourceRepository repo, DSManager dsManager, SchemaService schemaService) {
-        this.repo = repo;
+    public DatasourceController(DatasourceService datasourceService, DSManager dsManager, SchemaService schemaService) {
+        this.datasourceService = datasourceService;
         this.dsManager = dsManager;
         this.schemaService = schemaService;
     }
 
     @GetMapping
     public ApiResponse<List<Datasource>> list() {
-        return ApiResponse.success(repo.findAll());
+        return ApiResponse.success(datasourceService.listDatasources());
     }
 
     @GetMapping("/{id}")
     public ApiResponse<Datasource> get(@PathVariable Long id) {
-        return ApiResponse.success(repo.findById(id).orElseThrow(() -> new IllegalArgumentException("数据源不存在")));
+        return ApiResponse.success(datasourceService.getById(id));
     }
 
     @PostMapping
     public ApiResponse<Datasource> create(@RequestBody Datasource ds) {
-        ds.setStatus(ds.getStatus() != null ? ds.getStatus() : 1);
-        ds.setCreateTime(LocalDateTime.now());
-        return ApiResponse.success(repo.save(ds));
+        return ApiResponse.success(datasourceService.create(ds));
     }
 
     @PutMapping("/{id}")
     public ApiResponse<Datasource> update(@PathVariable Long id, @RequestBody Datasource ds) {
-        Datasource exist = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("数据源不存在"));
-        if (ds.getName() != null) exist.setName(ds.getName());
-        if (ds.getDbType() != null) exist.setDbType(ds.getDbType());
-        if (ds.getHost() != null) exist.setHost(ds.getHost());
-        if (ds.getPort() != null) exist.setPort(ds.getPort());
-        if (ds.getDatabaseName() != null) exist.setDatabaseName(ds.getDatabaseName());
-        if (ds.getUsername() != null) exist.setUsername(ds.getUsername());
-        if (ds.getPassword() != null) exist.setPassword(ds.getPassword());
-        if (ds.getStatus() != null) exist.setStatus(ds.getStatus());
+        Datasource updated = datasourceService.update(id, ds);
         dsManager.evict(id);
-        return ApiResponse.success(repo.save(exist));
+        return ApiResponse.success(updated);
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         dsManager.evict(id);
-        repo.deleteById(id);
+        datasourceService.deleteById(id);
         return ApiResponse.success(null);
     }
 
     @PostMapping("/{id}/test")
     public ApiResponse<Boolean> test(@PathVariable Long id) {
-        Datasource ds = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("数据源不存在"));
+        Datasource ds = datasourceService.getById(id);
         return ApiResponse.success(dsManager.test(ds));
     }
 
     @GetMapping("/{id}/schema")
     public ApiResponse<List<Map<String, Object>>> schema(@PathVariable Long id) {
-        Datasource ds = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("数据源不存在"));
+        Datasource ds = datasourceService.getById(id);
         return ApiResponse.success(schemaService.getSchema(dsManager.get(ds)));
     }
 }

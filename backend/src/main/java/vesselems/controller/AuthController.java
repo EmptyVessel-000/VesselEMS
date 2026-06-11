@@ -1,9 +1,7 @@
 package vesselems.controller;
 
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,18 +15,11 @@ import jakarta.validation.Valid;
 import vesselems.common.ApiResponse;
 import vesselems.dto.LoginDto;
 import vesselems.dto.RegisterDto;
-import vesselems.model.Role;
 import vesselems.model.User;
-import vesselems.repository.MenuPermissionRepository;
-import vesselems.repository.RoleRepository;
-import vesselems.repository.UserRepository;
-import vesselems.repository.UserRoleRepository;
 import vesselems.security.JwtService;
 import vesselems.service.AuthService;
-import vesselems.service.MenuService;
-import vesselems.service.PermissionRoleService;
 import vesselems.service.PermissionService;
-import vesselems.service.RoleMenuService;
+import vesselems.service.UserService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,38 +27,20 @@ public class AuthController {
 
         private final AuthService authService;
         private final JwtService jwtService;
-        private final UserRepository userRepository;
-        private final UserRoleRepository userRoleRepository;
-        private final RoleRepository roleRepository;
-        private final RoleMenuService roleMenuService;
-        private final PermissionRoleService permissionRoleService;
+        private final UserService userService;
         private final PermissionService permissionService;
-        private final MenuPermissionRepository menuPermissionRepository;
         private final org.springframework.security.authentication.AuthenticationManager authenticationManager;
-        private final MenuService menuService;
 
         public AuthController(AuthService authService,
                         JwtService jwtService,
-                        UserRepository userRepository,
-                        UserRoleRepository userRoleRepository,
-                        RoleRepository roleRepository,
-                        RoleMenuService roleMenuService,
-                        PermissionRoleService permissionRoleService,
+                        UserService userService,
                         PermissionService permissionService,
-                        MenuPermissionRepository menuPermissionRepository,
-                        org.springframework.security.authentication.AuthenticationManager authenticationManager,
-                        MenuService menuService) {
+                        org.springframework.security.authentication.AuthenticationManager authenticationManager) {
                 this.authService = authService;
                 this.jwtService = jwtService;
-                this.userRepository = userRepository;
-                this.userRoleRepository = userRoleRepository;
-                this.roleRepository = roleRepository;
-                this.roleMenuService = roleMenuService;
-                this.permissionRoleService = permissionRoleService;
+                this.userService = userService;
                 this.permissionService = permissionService;
-                this.menuPermissionRepository = menuPermissionRepository;
                 this.authenticationManager = authenticationManager;
-                this.menuService = menuService;
         }
 
         @PostMapping("/register")
@@ -76,12 +49,13 @@ public class AuthController {
         }
 
         @PostMapping("/login")
-        public ApiResponse<java.util.Map<String, Object>> login(@Valid @RequestBody LoginDto request) {
+        public ApiResponse<Map<String, Object>> login(@Valid @RequestBody LoginDto request) {
                 authenticationManager.authenticate(
                                 UsernamePasswordAuthenticationToken.unauthenticated(request.email(),
                                                 request.password()));
 
-                User user = userRepository.findByEmail(request.email()).orElseThrow();
+                User user = userService.getUserByEmail(request.email())
+                                .orElseThrow(() -> new RuntimeException("用户不存在"));
 
                 if (user.getStatus() != null && user.getStatus() != 1) {
                         throw new RuntimeException("账户已被禁用");
@@ -89,92 +63,39 @@ public class AuthController {
 
                 String token = jwtService.generateToken(user.getId());
 
-                List<String> roles = userRoleRepository.findByUserId(user.getId()).stream()
-                                .map(ur -> roleRepository.findById(ur.getRoleId()).orElse(null))
-                                .filter(r -> r != null)
-                                .map(r -> r.getRoleName())
-                                .collect(Collectors.toList());
+                List<String> roles = userService.listUsersWithRoles().stream()
+                                .filter(dto -> dto.getId().equals(user.getId()))
+                                .flatMap(dto -> dto.getRoleNames().stream())
+                                .toList();
 
-                return ApiResponse.success(java.util.Map.of(
+                return ApiResponse.success(Map.of(
                                 "token", token,
-                                "user", java.util.Map.of(
+                                "user", Map.of(
                                                 "id", user.getId(),
                                                 "username", user.getUsername(),
                                                 "roles", roles)));
         }
 
         @GetMapping("/me")
-        public ApiResponse<java.util.Map<String, Object>> getCurrentUser(Authentication auth) {
+        public ApiResponse<Map<String, Object>> getCurrentUser(Authentication auth) {
                 Long userId = (Long) auth.getPrincipal();
-                User user = userRepository.findById(userId).orElseThrow();
+                User user = userService.getUserById(userId)
+                                .orElseThrow(() -> new RuntimeException("用户不存在"));
 
-                List<String> roles = userRoleRepository.findByUserId(userId).stream()
-                                .map(ur -> roleRepository.findById(ur.getRoleId()).orElse(null))
-                                .filter(r -> r != null)
-                                .map(r -> r.getRoleName())
-                                .collect(Collectors.toList());
+                List<String> roles = userService.listUsersWithRoles().stream()
+                                .filter(dto -> dto.getId().equals(userId))
+                                .flatMap(dto -> dto.getRoleNames().stream())
+                                .toList();
 
-                return ApiResponse.success(java.util.Map.of(
+                return ApiResponse.success(Map.of(
                                 "id", user.getId(),
                                 "username", user.getUsername(),
                                 "roles", roles));
         }
 
         @GetMapping("/permissions")
-        public ApiResponse<java.util.Map<String, Object>> getPermissions(Authentication auth) {
+        public ApiResponse<Map<String, Object>> getPermissions(Authentication auth) {
                 Long userId = (Long) auth.getPrincipal();
-
-                boolean isSuperAdmin = userRoleRepository.findByUserId(userId).stream()
-                                .map(ur -> roleRepository.findById(ur.getRoleId()).orElse(null))
-                                .filter(r -> r != null)
-                                .anyMatch(r -> "super_admin".equals(r.getRoleName()));
-
-                if (isSuperAdmin) {
-                        return ApiResponse.success(java.util.Map.of(
-                                        "menus", Set.of(-1L),
-                                        "permissions", Set.of("*"),
-                                        "menuTree", menuService.getTree()));
-                }
-
-                Set<Long> menuIds = new LinkedHashSet<>();
-                Set<String> permCodes = new LinkedHashSet<>();
-                Set<Long> permissionIds = new LinkedHashSet<>();
-
-                for (var ur : userRoleRepository.findByUserId(userId)) {
-                        Role role = roleRepository.findById(ur.getRoleId()).orElse(null);
-                        if (role == null || (role.getStatus() != null && role.getStatus() != 1))
-                                continue;
-                        roleMenuService.findByRoleId(ur.getRoleId())
-                                        .forEach(rm -> menuIds.add(rm.getMenuId()));
-                        permissionRoleService.findByRoleId(ur.getRoleId())
-                                        .forEach(rp -> permissionIds.add(rp.getPermissionId()));
-                }
-
-                java.util.Map<Long, Set<Long>> permMenuMap = new java.util.LinkedHashMap<>();
-                for (var mp : menuPermissionRepository.findAll()) {
-                        permMenuMap.computeIfAbsent(mp.getPermissionId(), k -> new LinkedHashSet<>())
-                                        .add(mp.getMenuId());
-                }
-
-                for (Long permId : permissionIds) {
-                        try {
-                                String code = permissionService.getPermissionById(permId).getPermissionCode();
-                                Set<Long> requiredMenus = permMenuMap.get(permId);
-                                if (requiredMenus == null || requiredMenus.isEmpty()) {
-                                        permCodes.add(code);
-                                } else {
-                                        requiredMenus.retainAll(menuIds);
-                                        if (!requiredMenus.isEmpty()) {
-                                                permCodes.add(code);
-                                        }
-                                }
-                        } catch (IllegalArgumentException ignored) {
-                        }
-                }
-
-                return ApiResponse.success(java.util.Map.of(
-                                "menus", menuIds,
-                                "permissions", permCodes,
-                                "menuTree", menuService.getTree()));
+                return ApiResponse.success(permissionService.calculateUserPermissions(userId));
         }
 }

@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import router from '../router/index.js'
 
 const request = axios.create({
   baseURL: '',
@@ -41,9 +40,9 @@ request.interceptors.response.use(
       const status = error.response.status
       if (status === 401) {
         localStorage.removeItem('token')
-        if (router.currentRoute.value?.path !== '/login') {
+        if (window.location.pathname !== '/login') {
           ElMessage.error('登录已过期，请重新登录')
-          router.push('/login')
+          window.location.href = '/login'
         } else {
           ElMessage.error(error.response.data?.message || '邮箱或密码错误')
         }

@@ -1,32 +1,33 @@
 package vesselems.controller;
 
-import org.springframework.security.core.Authentication;
+import java.util.Map;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import vesselems.common.ApiResponse;
-import vesselems.repository.ConfigRepository;
-import vesselems.repository.UserRepository;
+import vesselems.service.ConfigService;
+import vesselems.service.UserService;
 
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
 
-    private final UserRepository userRepository;
-    private final ConfigRepository configRepository;
+    private final UserService userService;
+    private final ConfigService configService;
 
-    public DashboardController(UserRepository userRepository, ConfigRepository configRepository) {
-        this.userRepository = userRepository;
-        this.configRepository = configRepository;
+    public DashboardController(UserService userService, ConfigService configService) {
+        this.userService = userService;
+        this.configService = configService;
     }
 
     @GetMapping("/stats")
-    public ApiResponse<java.util.Map<String, Object>> getStats(Authentication auth) {
-        long userCount = userRepository.count();
-        long configCount = configRepository.count();
+    public ApiResponse<Map<String, Object>> getStats() {
+        long userCount = userService.count();
+        long configCount = configService.count();
 
-        return ApiResponse.success(java.util.Map.of(
+        return ApiResponse.success(Map.of(
                 "userCount", (int) userCount,
                 "taskCount", (int) configCount));
     }

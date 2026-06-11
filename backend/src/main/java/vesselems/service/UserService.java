@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -112,6 +112,10 @@ public class UserService {
 
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    public long count() {
+        return userRepository.count();
     }
 
     public void updateUser(Long id, UserUpdateDto dto) {
@@ -269,7 +273,8 @@ public class UserService {
         for (int i = 0; i < rows.size(); i++) {
             String[] cols = rows.get(i);
             // Skip empty rows
-            if (cols.length == 0 || (cols.length == 1 && cols[0].isBlank())) continue;
+            if (cols.length == 0 || (cols.length == 1 && cols[0].isBlank()))
+                continue;
             try {
                 if (cols.length < 3) {
                     throw new IllegalArgumentException("列数不足，至少需要用户名、密码、邮箱三列");
@@ -327,9 +332,13 @@ public class UserService {
                 if (!line.isEmpty() && line.charAt(0) == '\uFEFF') {
                     line = line.substring(1);
                 }
-                if (line.isEmpty()) continue;
+                if (line.isEmpty())
+                    continue;
                 // Always skip the first line (header row)
-                if (firstLine) { firstLine = false; continue; }
+                if (firstLine) {
+                    firstLine = false;
+                    continue;
+                }
                 rows.add(line.split(",", -1));
             }
         } catch (Exception e) {
@@ -344,7 +353,10 @@ public class UserService {
             Sheet sheet = wb.getSheetAt(0);
             boolean firstRow = true;
             for (Row row : sheet) {
-                if (firstRow) { firstRow = false; continue; }
+                if (firstRow) {
+                    firstRow = false;
+                    continue;
+                }
                 int cols = Math.max(row.getLastCellNum(), 5);
                 String[] cells = new String[cols];
                 boolean hasData = false;
@@ -352,12 +364,14 @@ public class UserService {
                     var cell = row.getCell(c);
                     if (cell != null) {
                         cells[c] = cell.toString().trim();
-                        if (!cells[c].isEmpty()) hasData = true;
+                        if (!cells[c].isEmpty())
+                            hasData = true;
                     } else {
                         cells[c] = "";
                     }
                 }
-                if (hasData) rows.add(cells);
+                if (hasData)
+                    rows.add(cells);
             }
         } catch (Exception e) {
             throw new RuntimeException("Excel读取失败: " + e.getMessage(), e);

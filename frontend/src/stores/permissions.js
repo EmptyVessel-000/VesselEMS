@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import request from '../api/request.js'
+import { fetchPermissions } from '../api/auth.js'
 
 export const SUPER_ADMIN_ROLE = 'super_admin'
 export const BUILT_IN_ROLES = [SUPER_ADMIN_ROLE]
@@ -46,7 +46,7 @@ export function getDashboardPath() {
 
 export async function loadPermissions() {
   try {
-    const d = await request.get('/api/auth/permissions')
+    const d = await fetchPermissions()
     if (d) {
       permissionStore.menus = d.menus || []
       permissionStore.permissions = d.permissions || []
