@@ -30,6 +30,12 @@ public class Model {
     private String modelId;
 
     @Column
+    private Integer version;
+
+    @Column(name = "model_type", length = 32)
+    private String modelType;
+
+    @Column
     private Integer status;
 
     @Column(name = "create_time", updatable = false)
@@ -76,6 +82,22 @@ public class Model {
 
     public void setModelId(String modelId) {
         this.modelId = modelId;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
+    public String getModelType() {
+        return modelType;
+    }
+
+    public void setModelType(String modelType) {
+        this.modelType = modelType;
     }
 
     public Integer getStatus() {

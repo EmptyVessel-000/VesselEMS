@@ -31,3 +31,7 @@ export function registerMenuRoutes(router, menuTree) {
 
   traverse(workspaceNode.children)
 }
+
+export function resetRoutesRegistered() {
+  routesRegistered = false
+}

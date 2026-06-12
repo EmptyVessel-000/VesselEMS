@@ -7,7 +7,7 @@
       </el-form>
     </el-card>
     <el-card class="table-card" shadow="never">
-      <div class="toolbar"><div class="toolbar-left"><el-button v-if="hasMenu(22) && hasPermission('role:manage')" type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button><el-button v-if="hasMenu(22) && hasPermission('role:manage')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
+      <div class="toolbar"><div class="toolbar-left"><el-button v-if="hasMenu(22) && hasPermission('role:create')" type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button><el-button v-if="hasMenu(22) && hasPermission('role:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
       <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width:100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="50" align="center" :selectable="(row) => !BUILT_IN_ROLES.includes(row.roleName)" />
         <el-table-column type="index" label="序号" width="60" align="center" />
@@ -23,10 +23,10 @@
         </el-table-column>
         <el-table-column label="操作" width="280" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:assignMenu')" type="success" size="small" :icon="Menu" link @click="handleAssignMenu(row)">分配菜单</el-button>
-            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:assignPerm')" type="warning" size="small" :icon="Key" link @click="handleAssignPerm(row)">分配权限</el-button>
-            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:manage')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasMenu(22) && hasPermission('role:manage')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
+            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasPermission('role:assign')" type="success" size="small" :icon="Menu" link @click="handleAssignMenu(row)">分配菜单</el-button>
+            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasPermission('role:assign')" type="warning" size="small" :icon="Key" link @click="handleAssignPerm(row)">分配权限</el-button>
+            <el-button v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasPermission('role:edit')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-if="!BUILT_IN_ROLES.includes(row.roleName) && hasPermission('role:delete')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
           </template>
         </el-table-column>
       </el-table>

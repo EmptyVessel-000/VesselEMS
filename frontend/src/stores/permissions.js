@@ -13,6 +13,8 @@ export const permissionStore = reactive({
 
 export function hasMenu(menuId) {
   if (permissionStore.menus.includes(-1)) return true
+  // 用户中心及子菜单对所有用户可见
+  if (menuId === 6 || menuId === 61) return true
   return permissionStore.menus.includes(menuId)
 }
 
@@ -41,7 +43,7 @@ export function getDashboardPath() {
     }
     return null
   }
-  return findFirst(wsNode.children) || '/workspace'
+  return findFirst(wsNode.children) || '/workspace/profile'
 }
 
 export async function loadPermissions() {
@@ -57,4 +59,11 @@ export async function loadPermissions() {
     permissionStore.permissions = []
   }
   permissionStore.loaded = true
+}
+
+export function resetPermissions() {
+  permissionStore.menus = []
+  permissionStore.permissions = []
+  permissionStore.menuTree = []
+  permissionStore.loaded = false
 }

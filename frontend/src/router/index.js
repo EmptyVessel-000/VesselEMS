@@ -8,6 +8,7 @@ const Register = () => import('../views/Register.vue')
 const Workspace = () => import('../views/workspace.vue')
 const Forbidden = () => import('../views/403.vue')
 const NotFound = () => import('../views/404.vue')
+const UserProfile = () => import('../views/workspace/UserProfile.vue')
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -18,7 +19,10 @@ const routes = [
   {
     path: '/workspace', name: 'workspace', component: Workspace,
     meta: { requiresAuth: true },
-    children: []
+    children: [
+      // 用户个人中心 — 所有用户均可访问，不校验菜单权限
+      { path: 'profile', name: 'UserProfile', component: UserProfile, meta: { title: '用户个人中心' } }
+    ]
   },
   { path: '/:pathMatch(.*)*', redirect: '/404' }
 ]

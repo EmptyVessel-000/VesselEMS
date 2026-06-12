@@ -42,6 +42,10 @@ public class ModelService {
             exist.setApiKey(m.getApiKey());
         if (m.getModelId() != null)
             exist.setModelId(m.getModelId());
+        if (m.getVersion() != null)
+            exist.setVersion(m.getVersion());
+        if (m.getModelType() != null)
+            exist.setModelType(m.getModelType());
         if (m.getStatus() != null)
             exist.setStatus(m.getStatus());
         return modelRepository.save(exist);

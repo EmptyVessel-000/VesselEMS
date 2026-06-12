@@ -114,6 +114,10 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    public void updateLoginInfo(User user) {
+        userRepository.save(user);
+    }
+
     public long count() {
         return userRepository.count();
     }

@@ -10,7 +10,7 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <el-button v-if="hasMenu(21) && hasPermission('user:create')" type="primary" :icon="Plus" @click="handleAdd">新增用户</el-button>
-          <el-button type="success" :icon="Upload" @click="importVisible = true">导入用户</el-button>
+          <el-button v-if="hasPermission('user:create')" type="success" :icon="Upload" @click="importVisible = true">导入用户</el-button>
           <el-button v-if="hasMenu(21) && hasPermission('user:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length === 0" @click="handleBatchDelete">批量删除</el-button>
         </div>
         <div class="toolbar-right">
@@ -43,7 +43,7 @@
               <el-tag type="danger" size="small">系统保护</el-tag>
             </template>
             <template v-else>
-              <el-button v-if="hasMenu(21) && hasPermission('user:update')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+              <el-button v-if="hasPermission('user:edit')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
               <el-popconfirm v-if="hasMenu(21) && hasPermission('user:delete')" title="确定删除该用户吗？" @confirm="handleDelete(row)">
                 <template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template>
               </el-popconfirm>

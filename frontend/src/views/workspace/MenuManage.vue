@@ -11,7 +11,7 @@
           <el-button :icon="Refresh" @click="handleReset">重置</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button type="success" :icon="Plus" @click="handleAdd">新增</el-button>
+          <el-button v-if="hasPermission('menu:create')" type="success" :icon="Plus" @click="handleAdd">新增</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -51,10 +51,10 @@
         </el-table-column>
         <el-table-column label="操作" width="240" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link :icon="Edit" @click="handleEdit(row)">编辑</el-button>
-            <el-button type="warning" link :icon="Top" @click="handleMove(row.id, 'up')">上移</el-button>
-            <el-button type="warning" link :icon="Bottom" @click="handleMove(row.id, 'down')">下移</el-button>
-            <el-popconfirm title="确定删除该菜单吗？" @confirm="handleDelete(row.id)">
+            <el-button v-if="hasPermission('menu:edit')" type="primary" link :icon="Edit" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-if="hasPermission('menu:move')" type="warning" link :icon="Top" @click="handleMove(row.id, 'up')">上移</el-button>
+            <el-button v-if="hasPermission('menu:move')" type="warning" link :icon="Bottom" @click="handleMove(row.id, 'down')">下移</el-button>
+            <el-popconfirm v-if="hasPermission('menu:delete')" title="确定删除该菜单吗？" @confirm="handleDelete(row.id)">
               <template #reference>
                 <el-button type="danger" link :icon="Delete">删除</el-button>
               </template>
@@ -137,6 +137,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Plus, Edit, Top, Bottom, Delete } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
+import { hasPermission } from '../../stores/permissions.js'
 
 const treeData = ref([])
 const tableLoading = ref(false)

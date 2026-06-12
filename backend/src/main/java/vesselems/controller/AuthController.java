@@ -1,11 +1,14 @@
 package vesselems.controller;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,7 +52,8 @@ public class AuthController {
         }
 
         @PostMapping("/login")
-        public ApiResponse<Map<String, Object>> login(@Valid @RequestBody LoginDto request) {
+        public ApiResponse<Map<String, Object>> login(@Valid @RequestBody LoginDto request,
+                                                       HttpServletRequest httpRequest) {
                 authenticationManager.authenticate(
                                 UsernamePasswordAuthenticationToken.unauthenticated(request.email(),
                                                 request.password()));
@@ -60,6 +64,11 @@ public class AuthController {
                 if (user.getStatus() != null && user.getStatus() != 1) {
                         throw new RuntimeException("账户已被禁用");
                 }
+
+                // 记录最后登录信息
+                user.setLastLoginIp(httpRequest.getRemoteAddr());
+                user.setLastLoginTime(java.time.LocalDateTime.now());
+                userService.updateLoginInfo(user);
 
                 String token = jwtService.generateToken(user.getId());
 
@@ -87,10 +96,24 @@ public class AuthController {
                                 .flatMap(dto -> dto.getRoleNames().stream())
                                 .toList();
 
-                return ApiResponse.success(Map.of(
-                                "id", user.getId(),
-                                "username", user.getUsername(),
-                                "roles", roles));
+                Map<String, Object> result = new LinkedHashMap<>();
+                result.put("id", user.getId());
+                result.put("username", user.getUsername());
+                result.put("nickname", user.getNickname());
+                result.put("realName", user.getRealName());
+                result.put("gender", user.getGender());
+                result.put("email", user.getEmail());
+                result.put("telephone", user.getTelephone());
+                result.put("departmentId", user.getDepartmentId());
+                result.put("avatar", user.getAvatar());
+                result.put("status", user.getStatus());
+                result.put("remark", user.getRemark());
+                result.put("lastLoginIp", user.getLastLoginIp());
+                result.put("lastLoginTime", user.getLastLoginTime());
+                result.put("createTime", user.getCreateTime());
+                result.put("modifyTime", user.getModifyTime());
+                result.put("roles", roles);
+                return ApiResponse.success(result);
         }
 
         @GetMapping("/permissions")

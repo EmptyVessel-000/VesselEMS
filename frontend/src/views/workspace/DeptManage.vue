@@ -7,7 +7,7 @@
       </el-form>
     </el-card>
     <el-card class="table-card" shadow="never">
-      <div class="toolbar"><div class="toolbar-left"><el-button v-if="hasPermission('dept:manage')" type="primary" :icon="Plus" @click="handleAdd(null)">新增部门</el-button><el-button v-if="hasPermission('dept:manage')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
+      <div class="toolbar"><div class="toolbar-left"><el-button v-if="hasPermission('dept:create')" type="primary" :icon="Plus" @click="handleAdd(null)">新增部门</el-button><el-button v-if="hasPermission('dept:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
       <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width:100%" row-key="id" :tree-props="{children:'children'}" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
@@ -19,9 +19,9 @@
         <el-table-column prop="createTime" label="创建时间" width="170" />
         <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="{row}">
-            <el-button v-if="hasPermission('dept:manage')" type="success" size="small" :icon="Plus" link @click="handleAdd(row)">添加子部门</el-button>
-            <el-button v-if="hasPermission('dept:manage')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm v-if="hasPermission('dept:manage')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
+            <el-button v-if="hasPermission('dept:create')" type="success" size="small" :icon="Plus" link @click="handleAdd(row)">添加子部门</el-button>
+            <el-button v-if="hasPermission('dept:edit')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-if="hasPermission('dept:delete')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
           </template>
         </el-table-column>
       </el-table>

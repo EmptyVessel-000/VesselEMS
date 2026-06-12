@@ -26,7 +26,7 @@
         <el-select v-model="modelId" placeholder="模型" size="large" style="width:240px">
           <el-option v-for="m in modelList" :key="m.id" :label="m.name" :value="m.id" />
         </el-select>
-        <el-button v-if="messages.length > 0 && currentSessionId"
+        <el-button v-if="messages.length > 0 && currentSessionId && hasPermission('nl2sql:export')"
           size="small" type="warning" :icon="Document" @click="exportSummary">
           导出报告
         </el-button>
@@ -78,6 +78,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Check, Promotion, Loading, Document, ChatDotSquare } from '@element-plus/icons-vue'
 import axios from 'axios'
 import request from '../../api/request.js'
+import { hasPermission } from '../../stores/permissions.js'
 
 const dsList = ref([]), modelList = ref([])
 const dsId = ref(null), modelId = ref(null)
@@ -112,7 +113,6 @@ function newSession() {
 
 async function selectSession(s) {
   currentSessionId.value = s.sessionId
-  // Restore dsId/modelId from session table
   if (s.datasourceId) dsId.value = s.datasourceId
   if (s.modelId) modelId.value = s.modelId
   messages.value = []

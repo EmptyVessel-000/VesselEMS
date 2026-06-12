@@ -1,5 +1,7 @@
 import { reactive } from 'vue'
 import { login as authLogin, getCurrentUser } from '../api/auth.js'
+import { resetPermissions } from './permissions.js'
+import { resetRoutesRegistered } from '../router/dynamicRoutes.js'
 
 export const userStore = reactive({
   user: null,
@@ -34,4 +36,6 @@ export function logout() {
   localStorage.removeItem('token')
   userStore.user = null
   userStore.isAuthenticated = false
+  resetPermissions()
+  resetRoutesRegistered()
 }

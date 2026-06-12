@@ -13,7 +13,7 @@
         <el-table-column label="操作" width="140" align="center" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" :icon="View" link @click="handleView(row.sessionId)">详情</el-button>
-            <el-popconfirm title="确定删除？" @confirm="handleDel(row)">
+            <el-popconfirm v-if="hasPermission('dialog:delete')" title="确定删除？" @confirm="handleDel(row)">
               <template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template>
             </el-popconfirm>
           </template>
@@ -42,13 +42,15 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { View, Delete } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
+import { hasPermission } from '../../stores/permissions.js'
 
 const sessions = ref([]), loading = ref(false)
 
-async function fetch() {
+async function fetchSessions() {
   loading.value = true
   try {
-    sessions.value = (await request.get('/api/dialog/sessions')) || []
+    const d = await request.get('/api/dialog/sessions')
+    sessions.value = d || []
   } catch { sessions.value = [] }
   finally { loading.value = false }
 }
@@ -59,8 +61,10 @@ function fmtTime(t) {
 }
 
 const detailVisible = ref(false), detailDialogs = ref([])
+
 async function handleView(sessionId) {
-  detailVisible.value = true; detailDialogs.value = []
+  detailVisible.value = true
+  detailDialogs.value = []
   try {
     const dialogs = (await request.get(`/api/dialog/session/${sessionId}`)) || []
     detailDialogs.value = dialogs.map(d => {
@@ -71,29 +75,26 @@ async function handleView(sessionId) {
   } catch { detailDialogs.value = [] }
 }
 
-async function handleDel(row) {
-  try {
-    const dialogs = (await request.get(`/api/dialog/session/${row.sessionId}`)) || []
-    for (const d of dialogs) {
-      await request.delete(`/api/dialog/${d.id}`)
-    }
-    ElMessage.success('已删除'); await fetch()
-  } catch { ElMessage.error('删除失败') }
-}
-
 function getCols(rows) {
   return rows && rows.length ? Object.keys(rows[0]) : []
 }
 
-onMounted(fetch)
+async function handleDel(row) {
+  try {
+    await request.delete(`/api/dialog/${row.id}`)
+    ElMessage.success('已删除')
+    await fetchSessions()
+  } catch { ElMessage.error('删除失败') }
+}
+
+onMounted(fetchSessions)
 </script>
 
 <style scoped>
 .dialog-history { height: 100%; display: flex; flex-direction: column; }
 .table-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.detail-block { margin-bottom: 12px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; }
-.detail-q { font-size: 14px; color: #2563eb; font-weight: 500; }
-.detail-sql { margin-top: 4px; background: #1e293b; color: #e2e8f0; padding: 6px 10px; border-radius: 4px; font-size: 12px; overflow-x: auto; }
-.detail-sql code { white-space: pre-wrap; word-break: break-all; }
-.detail-error { margin-top: 4px; color: #ef4444; font-size: 13px; }
+.detail-block { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+.detail-q { font-weight: 600; color: #2563eb; margin-bottom: 4px; }
+.detail-sql code { background: #1e293b; color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 13px; display: block; overflow-x: auto; }
+.detail-error { color: #ef4444; font-size: 13px; margin-top: 4px; }
 </style>

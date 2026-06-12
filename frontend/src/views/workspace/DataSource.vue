@@ -2,7 +2,7 @@
   <div class="datasource-manage">
     <el-card class="table-card" shadow="never">
       <div class="toolbar">
-        <el-button type="primary" :icon="Plus" @click="handleAdd">新增数据源</el-button>
+        <el-button type="primary" :icon="Plus" @click="handleAdd" v-if="hasPermission('ds:create')">新增数据源</el-button>
       </div>
       <el-table :data="pagedData" v-loading="loading" stripe border style="width: 100%">
         <el-table-column type="index" label="序号" width="60" align="center" />
@@ -29,10 +29,10 @@
         </el-table-column>
         <el-table-column label="操作" width="280" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-button type="primary" size="small" :icon="Edit" link @click="handleEdit(row)" v-if="hasPermission('ds:edit')">编辑</el-button>
             <el-button type="success" size="small" :icon="Connection" link @click="handleTest(row)">测试</el-button>
             <el-button type="warning" size="small" :icon="DataBoard" link @click="handleSchema(row)">结构</el-button>
-            <el-popconfirm title="确定删除吗？" @confirm="handleDelete(row)">
+            <el-popconfirm title="确定删除吗？" @confirm="handleDelete(row)" v-if="hasPermission('ds:delete')">
               <template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template>
             </el-popconfirm>
           </template>
@@ -84,6 +84,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Edit, Delete, Connection, DataBoard } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
+import { hasPermission } from '../../stores/permissions.js'
 
 const defaultPortMap = { mysql: 3306, postgresql: 5432, oracle: 1521, sqlserver: 1433, mariadb: 3306 }
 

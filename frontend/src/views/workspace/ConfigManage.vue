@@ -9,8 +9,8 @@
     <el-card class="table-card" shadow="never">
       <div class="toolbar">
         <div class="toolbar-left">
-          <el-button v-if="hasMenu(26) && hasPermission('config:manage')" type="primary" :icon="Plus" @click="handleAdd">新增配置</el-button>
-          <el-button v-if="hasMenu(26) && hasPermission('config:manage')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button>
+          <el-button v-if="hasPermission('config:create')" type="primary" :icon="Plus" @click="handleAdd">新增配置</el-button>
+          <el-button v-if="hasPermission('config:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button>
         </div>
       </div>
       <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width:100%" @selection-change="handleSelectionChange">
@@ -33,8 +33,8 @@
         </el-table-column>
         <el-table-column label="操作" width="160" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="hasMenu(26) && hasPermission('config:manage')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm v-if="hasMenu(26) && hasPermission('config:manage')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
+            <el-button v-if="hasPermission('config:edit')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-if="hasPermission('config:delete')" title="确定删除?" @confirm="handleDelete(row)"><template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template></el-popconfirm>
           </template>
         </el-table-column>
       </el-table>

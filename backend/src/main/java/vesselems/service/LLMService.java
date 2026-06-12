@@ -45,6 +45,67 @@ public class LLMService {
     }
 
     @SuppressWarnings("unchecked")
+    public float[] embedding(Model model, String text) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", model.getModelId());
+        body.put("input", text);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + model.getApiKey());
+        headers.set("Content-Type", "application/json");
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        Map<String, Object> resp = rest.postForObject(
+                model.getApiUrl() + "/embeddings", entity, Map.class);
+
+        if (resp == null) {
+            throw new RuntimeException("Embedding模型无响应");
+        }
+
+        List<Map<String, Object>> data = (List<Map<String, Object>>) resp.get("data");
+        if (data == null || data.isEmpty()) {
+            throw new RuntimeException("Embedding模型返回无data");
+        }
+
+        List<Double> embeddingList = (List<Double>) data.get(0).get("embedding");
+        if (embeddingList == null) {
+            throw new RuntimeException("Embedding模型返回无embedding");
+        }
+
+        float[] result = new float[embeddingList.size()];
+        for (int i = 0; i < embeddingList.size(); i++) {
+            result[i] = embeddingList.get(i).floatValue();
+        }
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    public String chatVision(Model model, List<Map<String, Object>> imageMessages,
+                              String prompt) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", model.getModelId());
+
+        List<Map<String, Object>> messages = new java.util.ArrayList<>();
+        Map<String, Object> userMsg = new LinkedHashMap<>();
+        userMsg.put("role", "user");
+
+        List<Map<String, Object>> contentParts = new java.util.ArrayList<>();
+        if (prompt != null && !prompt.isEmpty()) {
+            contentParts.add(Map.of("type", "text", "text", prompt));
+        }
+        contentParts.addAll(imageMessages);
+
+        userMsg.put("content", contentParts);
+        messages.add(userMsg);
+
+        body.put("messages", messages);
+        body.put("temperature", 0.3);
+        body.put("max_tokens", 2000);
+
+        return doRequest(model, body);
+    }
+
+    @SuppressWarnings("unchecked")
     private String doRequest(Model model, Map<String, Object> body) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + model.getApiKey());
