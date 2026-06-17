@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import vesselems.annotation.OperateLog;
 import vesselems.model.Menu;
 import vesselems.model.MenuPermission;
 import vesselems.model.Permission;
@@ -57,33 +56,28 @@ public class RoleController {
     }
 
     @PostMapping
-    @OperateLog(module = "角色管理", operation = "新增角色")
     public Role createRole(@RequestBody Role role) {
         return roleService.createRole(role);
     }
 
     @PutMapping("/{id}")
-    @OperateLog(module = "角色管理", operation = "修改角色")
     public Role updateRole(@PathVariable Long id, @RequestBody Role role) {
         return roleService.updateRole(id, role);
     }
 
     @DeleteMapping("/{id}")
-    @OperateLog(module = "角色管理", operation = "删除角色")
     public void deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
     }
 
     @PostMapping("/{id}/menus")
-    @OperateLog(module = "角色管理", operation = "分配菜单")
     public void assignMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
         roleService.assignMenus(id, menuIds);
     }
 
-    @PostMapping("/{id}/permissions")
-    @OperateLog(module = "角色管理", operation = "分配权限")
-    public void assignPermissions(@PathVariable Long id, @RequestBody List<Long> permIds) {
-        roleService.assignPermissions(id, permIds);
+    @GetMapping("/{id}/menus")
+    public List<RoleMenu> getRoleMenus(@PathVariable Long id) {
+        return roleService.getRoleMenus(id);
     }
 
     @PostMapping("/{id}/permissions")

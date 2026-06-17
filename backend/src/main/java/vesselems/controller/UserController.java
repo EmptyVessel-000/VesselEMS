@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
-import vesselems.annotation.OperateLog;
 import vesselems.common.ApiResponse;
 import vesselems.dto.CreateUserDto;
 import vesselems.dto.UserResponseDto;
@@ -51,13 +50,11 @@ public class UserController {
     }
 
     @PostMapping
-    @OperateLog(module = "用户管理", operation = "新增用户")
     public ApiResponse<User> create(@Valid @RequestBody CreateUserDto request) {
         return ApiResponse.success(userService.createUser(request));
     }
 
     @DeleteMapping("/{id}")
-    @OperateLog(module = "用户管理", operation = "删除用户")
     public ApiResponse<Void> delete(@PathVariable Long id, Authentication auth) {
         if (!userService.isManager((Long) auth.getPrincipal())) {
             throw new org.springframework.security.access.AccessDeniedException("无权操作");
@@ -69,7 +66,6 @@ public class UserController {
     }
 
     @PutMapping("/{id}/info")
-    @OperateLog(module = "用户管理", operation = "修改用户")
     public ApiResponse<Void> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDto request) {
         userService.updateUser(id, request);
         return ApiResponse.success(null);
@@ -82,7 +78,6 @@ public class UserController {
     }
 
     @PostMapping("/import")
-    @OperateLog(module = "用户管理", operation = "导入用户")
     public ApiResponse<Map<String, Object>> importUsers(@RequestParam("file") MultipartFile file) {
         return ApiResponse.success(userService.importUsers(file));
     }
