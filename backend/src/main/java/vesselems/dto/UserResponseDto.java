@@ -8,8 +8,12 @@ public class UserResponseDto {
     private Long id;
     private String username;
     private String nickname;
+    private String realName;
+    private Integer gender;
     private String email;
     private String telephone;
+    private Long departmentId;
+    private String remark;
     private Integer status;
     private LocalDateTime createTime;
     private List<Long> roleIds;
@@ -40,6 +44,22 @@ public class UserResponseDto {
         this.nickname = nickname;
     }
 
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName;
+    }
+
+    public Integer getGender() {
+        return gender;
+    }
+
+    public void setGender(Integer gender) {
+        this.gender = gender;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -54,6 +74,22 @@ public class UserResponseDto {
 
     public void setTelephone(String telephone) {
         this.telephone = telephone;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public Integer getStatus() {

@@ -1,7 +1,10 @@
 <template>
-  <div class="menu-manage">
-    <!-- 搜索 -->
-    <el-card class="search-card" shadow="never">
+  <div class="page-container">
+    <div class="page-header">
+      <h2 class="page-title">菜单管理</h2>
+      <p class="page-subtitle">管理系统导航菜单与路由配置</p>
+    </div>
+    <div class="search-section">
       <el-form :model="searchForm" inline>
         <el-form-item label="菜单名称">
           <el-input v-model="searchForm.menuName" placeholder="请输入菜单名称" clearable @keyup.enter="handleSearch" />
@@ -10,18 +13,19 @@
           <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
           <el-button :icon="Refresh" @click="handleReset">重置</el-button>
         </el-form-item>
-        <el-form-item>
-          <el-button v-if="hasPermission('menu:create')" type="success" :icon="Plus" @click="handleAdd">新增</el-button>
-        </el-form-item>
       </el-form>
-    </el-card>
+    </div>
 
-    <!-- 表格 -->
-    <el-card class="table-card" shadow="never">
+    <div class="table-section">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <el-button v-if="hasPermission('menu:create')" type="primary" :icon="Plus" @click="handleAdd">新增菜单</el-button>
+        </div>
+      </div>
       <el-table
         :data="filteredTree"
         v-loading="tableLoading"
-        stripe border
+        stripe
         style="width:100%"
         row-key="id"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
@@ -51,20 +55,19 @@
         </el-table-column>
         <el-table-column label="操作" width="240" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="hasPermission('menu:edit')" type="primary" link :icon="Edit" @click="handleEdit(row)">编辑</el-button>
-            <el-button v-if="hasPermission('menu:move')" type="warning" link :icon="Top" @click="handleMove(row.id, 'up')">上移</el-button>
-            <el-button v-if="hasPermission('menu:move')" type="warning" link :icon="Bottom" @click="handleMove(row.id, 'down')">下移</el-button>
+            <el-button v-if="hasPermission('menu:edit')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
+            <el-button v-if="hasPermission('menu:move')" type="warning" size="small" :icon="Top" link @click="handleMove(row.id, 'up')">上移</el-button>
+            <el-button v-if="hasPermission('menu:move')" type="warning" size="small" :icon="Bottom" link @click="handleMove(row.id, 'down')">下移</el-button>
             <el-popconfirm v-if="hasPermission('menu:delete')" title="确定删除该菜单吗？" @confirm="handleDelete(row.id)">
               <template #reference>
-                <el-button type="danger" link :icon="Delete">删除</el-button>
+                <el-button type="danger" size="small" :icon="Delete" link>删除</el-button>
               </template>
             </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
-    </el-card>
+    </div>
 
-    <!-- 新增/编辑弹窗 -->
     <el-dialog
       v-model="dialogVisible"
       :title="isEdit ? '编辑菜单' : '新增菜单'"
@@ -163,7 +166,6 @@ const formRules = {
   menuName: [{ required: true, message: '请输入菜单名称', trigger: 'blur' }]
 }
 
-// 搜索
 const searchForm = reactive({ menuName: '' })
 
 function filterTree(list) {
@@ -185,7 +187,6 @@ function handleReset() {
   searchForm.menuName = ''
 }
 
-// 父级下拉
 const parentOptions = computed(() => treeData.value)
 
 async function fetchTree() {
@@ -296,28 +297,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.menu-manage {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.search-card {
-  flex-shrink: 0;
-}
-.search-card .el-form {
-  margin-bottom: 0;
-}
-
-.table-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.dialog-form {
-  padding-right: 20px;
-}
+/* MenuManage 使用全局 .page-container / .page-header / .search-section / .table-section 样式 */
 </style>

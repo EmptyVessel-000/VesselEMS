@@ -1,10 +1,32 @@
 <template>
-  <div class="perm-manage">
-    <el-card class="table-card" shadow="never">
+  <div class="page-container">
+    <div class="page-header">
+      <h2 class="page-title">权限管理</h2>
+      <p class="page-subtitle">管理系统中的权限标识与编码</p>
+    </div>
+    <div class="search-section">
+      <el-form :model="searchForm" inline>
+        <el-form-item label="权限标识">
+          <el-input v-model="searchForm.keyword" placeholder="请输入权限标识" clearable @keyup.enter="handleSearch" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+          <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <div class="table-section">
       <div class="toolbar">
-        <el-button type="primary" :icon="Plus" @click="handleAdd" v-if="hasPermission('perm:create')">新增权限</el-button>
+        <div class="toolbar-left">
+          <el-button type="primary" :icon="Plus" @click="handleAdd" v-if="hasPermission('perm:create')">新增权限</el-button>
+          <el-button type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete" v-if="hasPermission('perm:delete')">批量删除</el-button>
+        </div>
+        <div class="toolbar-right">
+          <span class="selected-tip" v-if="selectedIds.length > 0">已选择 <strong>{{ selectedIds.length }}</strong> 项</span>
+        </div>
       </div>
-      <el-table :data="pagedData" v-loading="loading" stripe border style="width:100%">
+      <el-table :data="pagedData" v-loading="loading" stripe style="width:100%" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="50" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="permissionCode" label="权限标识" min-width="180">
           <template #default="{ row }"><el-tag size="small">{{ row.permissionCode }}</el-tag></template>
@@ -24,9 +46,9 @@
         </el-table-column>
       </el-table>
       <div class="pagination-wrap">
-        <el-pagination v-model:current-page="page" v-model:page-size="size" :page-sizes="[10,20,50]" :total="list.length" layout="total,sizes,prev,pager,next" background />
+        <el-pagination v-model:current-page="page" v-model:page-size="size" :page-sizes="[10,20,50]" :total="filteredList.length" layout="total,sizes,prev,pager,next" background />
       </div>
-    </el-card>
+    </div>
 
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑权限' : '新增权限'" width="520px" @close="resetForm">
       <el-form ref="fRef" :model="form" :rules="rules" label-width="80px">
@@ -36,19 +58,39 @@
       </el-form>
       <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button></template>
     </el-dialog>
+
+    <el-dialog v-model="batchDeleteVisible" title="批量删除确认" width="420px" :close-on-click-modal="false">
+      <p class="batch-delete-text">确定要删除选中的 <strong>{{ selectedIds.length }}</strong> 个权限吗？</p>
+      <template #footer><el-button @click="batchDeleteVisible=false">取消</el-button><el-button type="danger" :loading="batchLoading" @click="confirmBatchDelete">确定删除</el-button></template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Edit, Delete } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
 import { hasPermission } from '../../stores/permissions.js'
 
 const list = ref([]), loading = ref(false)
 const page = ref(1), size = ref(10)
-const pagedData = computed(() => list.value.slice((page.value - 1) * size.value, page.value * size.value))
+const selectedIds = ref([])
+const searchForm = reactive({ keyword: '' })
+
+const filteredList = computed(() => {
+  if (!searchForm.keyword) return list.value
+  return list.value.filter(i => (i.permissionCode || '').includes(searchForm.keyword) || (i.description || '').includes(searchForm.keyword))
+})
+
+const pagedData = computed(() => {
+  const s = (page.value - 1) * size.value
+  return filteredList.value.slice(s, s + size.value)
+})
+
+function handleSearch() { page.value = 1 }
+function handleReset() { searchForm.keyword = ''; page.value = 1 }
+function handleSelectionChange(rows) { selectedIds.value = rows.map(r => r.id) }
 
 async function fetch() {
   loading.value = true
@@ -99,12 +141,20 @@ async function handleDel(row) {
   try { await request.delete(`/api/permissions/${row.id}`); ElMessage.success('已删除'); await fetch() } catch {}
 }
 
+const batchDeleteVisible = ref(false), batchLoading = ref(false)
+function handleBatchDelete() { if (selectedIds.value.length === 0) { ElMessage.warning('请先选择'); return }; batchDeleteVisible.value = true }
+async function confirmBatchDelete() {
+  batchLoading.value = true
+  try {
+    for (const id of selectedIds.value) await request.delete(`/api/permissions/${id}`)
+    ElMessage.success(`已删除 ${selectedIds.value.length} 个权限`); selectedIds.value = []; batchDeleteVisible.value = false; await fetch()
+  } catch { ElMessage.error('批量删除失败') }
+  finally { batchLoading.value = false }
+}
+
 onMounted(fetch)
 </script>
 
 <style scoped>
-.perm-manage { height: 100%; display: flex; flex-direction: column; }
-.table-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.toolbar { margin-bottom: 16px; }
-.pagination-wrap { display: flex; justify-content: flex-end; padding-top: 16px; flex-shrink: 0; }
+/* PermissionManage 使用全局 .page-container / .page-header / .search-section / .table-section 样式 */
 </style>

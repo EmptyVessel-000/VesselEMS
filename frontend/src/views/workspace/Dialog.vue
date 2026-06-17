@@ -91,10 +91,10 @@ onMounted(fetchSessions)
 </script>
 
 <style scoped>
-.dialog-history { height: 100%; display: flex; flex-direction: column; }
-.table-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.detail-block { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
-.detail-q { font-weight: 600; color: #2563eb; margin-bottom: 4px; }
-.detail-sql code { background: #1e293b; color: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 13px; display: block; overflow-x: auto; }
+.dialog-history { height: 100%; display: flex; flex-direction: column; gap: 16px; }
+.table-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #ffffff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); }
+.detail-block { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0efed; }
+.detail-q { font-weight: 600; color: #4f46e5; margin-bottom: 4px; }
+.detail-sql code { background: #f5f5f4; color: #1c1917; padding: 8px 12px; border-radius: 8px; font-size: 13px; display: block; overflow-x: auto; }
 .detail-error { color: #ef4444; font-size: 13px; margin-top: 4px; }
 </style>

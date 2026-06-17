@@ -1,14 +1,30 @@
 <template>
-  <div class="role-manage">
-    <el-card class="search-card" shadow="never">
+  <div class="page-container">
+    <div class="page-header">
+      <h2 class="page-title">角色管理</h2>
+      <p class="page-subtitle">管理系统中的角色与权限分配</p>
+    </div>
+
+    <div class="search-section">
       <el-form :model="searchForm" inline>
-        <el-form-item label="角色标识"><el-input v-model="searchForm.roleName" placeholder="请输入角色标识" clearable /></el-form-item>
-        <el-form-item><el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button><el-button :icon="Refresh" @click="handleReset">重置</el-button></el-form-item>
+        <el-form-item label="角色标识">
+          <el-input v-model="searchForm.roleName" placeholder="请输入角色标识" clearable />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+          <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+        </el-form-item>
       </el-form>
-    </el-card>
-    <el-card class="table-card" shadow="never">
-      <div class="toolbar"><div class="toolbar-left"><el-button v-if="hasMenu(22) && hasPermission('role:create')" type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button><el-button v-if="hasMenu(22) && hasPermission('role:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button></div></div>
-      <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width:100%" @selection-change="handleSelectionChange">
+    </div>
+
+    <div class="table-section">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <el-button v-if="hasMenu(22) && hasPermission('role:create')" type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button>
+          <el-button v-if="hasMenu(22) && hasPermission('role:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button>
+        </div>
+      </div>
+      <el-table :data="pagedData" v-loading="tableLoading" stripe style="width:100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="50" align="center" :selectable="(row) => !BUILT_IN_ROLES.includes(row.roleName)" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="roleName" label="角色标识" min-width="150" />
@@ -31,7 +47,7 @@
         </el-table-column>
       </el-table>
       <div class="pagination-wrap"><el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10,20,50]" :total="filteredData.length" layout="total,sizes,prev,pager,next,jumper" background @size-change="handleSizeChange" /></div>
-    </el-card>
+    </div>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" :close-on-click-modal="false" @close="handleDialogClose">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="80px" class="dialog-form">
@@ -43,14 +59,35 @@
       <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button></template>
     </el-dialog>
 
+    <!-- 分配菜单 -->
     <el-dialog v-model="menuDialogVisible" :title="'分配菜单 - ' + currentRoleName" width="520px" :close-on-click-modal="false">
       <el-tree ref="menuTreeRef" :data="menuTreeData" show-checkbox node-key="id" default-expand-all :default-checked-keys="currentMenuKeys" />
       <template #footer><el-button @click="menuDialogVisible=false">取消</el-button><el-button type="primary" @click="handleMenuSave">保存</el-button></template>
     </el-dialog>
 
-    <el-dialog v-model="permDialogVisible" :title="'分配权限 - ' + currentRoleName" width="560px" :close-on-click-modal="false">
-      <el-tree ref="permTreeRef" :data="permTreeData" show-checkbox node-key="id" default-expand-all :default-checked-keys="currentPermKeys" />
-      <template #footer><el-button @click="permDialogVisible=false">取消</el-button><el-button type="primary" @click="handlePermSave">保存</el-button></template>
+    <!-- 分配权限（按菜单分组） -->
+    <el-dialog v-model="permDialogVisible" :title="'分配权限 - ' + currentRoleName" width="600px" :close-on-click-modal="false">
+      <div v-loading="permTreeLoading" class="perm-tree-container">
+        <div v-for="group in permTreeData" :key="group.menuId" class="perm-group">
+          <div class="perm-group-header">
+            <el-icon :size="16"><Folder /></el-icon>
+            <span class="perm-group-title">{{ group.menuName }}</span>
+          </div>
+          <div class="perm-group-body">
+            <div v-for="perm in group.permissions" :key="perm.id" class="perm-item">
+              <el-checkbox v-model="perm.checked" @change="onPermChange(perm)">
+                <span class="perm-code">{{ perm.permissionCode }}</span>
+                <span class="perm-desc" v-if="perm.description">{{ perm.description }}</span>
+              </el-checkbox>
+            </div>
+          </div>
+        </div>
+        <el-empty v-if="permTreeData.length === 0" description="暂无可用权限" />
+      </div>
+      <template #footer>
+        <el-button @click="permDialogVisible=false">取消</el-button>
+        <el-button type="primary" @click="handlePermSave">保存</el-button>
+      </template>
     </el-dialog>
 
     <el-dialog v-model="batchDeleteVisible" title="批量删除确认" width="420px" :close-on-click-modal="false">
@@ -63,7 +100,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search, Refresh, Plus, Delete, Edit, Menu, Key } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Delete, Edit, Menu, Key, Folder } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
 import { hasPermission, hasMenu, BUILT_IN_ROLES } from '../../stores/permissions.js'
 
@@ -126,10 +163,11 @@ function handleBatchDelete() { if (selectedIds.value.length===0) { ElMessage.war
 async function confirmBatchDelete() { batchLoading.value=true; try { for (const id of selectedIds.value) await request.delete(`/api/roles/${id}`); ElMessage.success(`已删除 ${selectedIds.value.length} 个角色`); selectedIds.value=[]; batchDeleteVisible.value=false; await fetchRoles() } catch { ElMessage.error('批量删除失败') } finally { batchLoading.value=false } }
 
 const menuDialogVisible=ref(false), permDialogVisible=ref(false), currentRoleName=ref(''), currentRoleId=ref(null)
-const currentMenuKeys=ref([]), currentPermKeys=ref([]), menuTreeRef=ref(null), permTreeRef=ref(null)
+const currentMenuKeys=ref([]), currentPermKeys=ref([]), menuTreeRef=ref(null)
 
 const menuTreeData = ref([])
 const permTreeData = ref([])
+const permTreeLoading = ref(false)
 
 function buildTree(list) {
   const map = {}, roots = []
@@ -166,18 +204,35 @@ async function handleMenuSave() {
 
 async function handleAssignPerm(row) {
   currentRoleName.value = row.roleName; currentRoleId.value = row.id
-  try {
-    const permList = await request.get('/api/permissions')
-    permTreeData.value = (permList || []).map(p => ({ id: p.id, label: p.permissionCode }))
-    const assigned = await request.get(`/api/roles/${row.id}/permissions`)
-    currentPermKeys.value = (assigned || []).map(rp => rp.permissionId)
-  } catch { permTreeData.value = []; currentPermKeys.value = [] }
   permDialogVisible.value = true
+  permTreeLoading.value = true
+  permTreeData.value = []
+  try {
+    const data = await request.get(`/api/roles/${row.id}/permissions/tree`)
+    permTreeData.value = data || []
+  } catch {
+    permTreeData.value = []
+    ElMessage.error('获取权限列表失败')
+  } finally {
+    permTreeLoading.value = false
+  }
+}
+
+function onPermChange(perm) {
+  // 实时更新选中状态，保存时统一提交
 }
 
 async function handlePermSave() {
+  // 收集所有选中的权限ID
+  const checkedIds = []
+  for (const group of permTreeData.value) {
+    for (const perm of group.permissions) {
+      if (perm.checked) {
+        checkedIds.push(perm.id)
+      }
+    }
+  }
   try {
-    const checkedIds = permTreeRef.value.getCheckedKeys()
     await request.post(`/api/roles/${currentRoleId.value}/permissions`, checkedIds)
     ElMessage.success(`权限分配成功，共 ${checkedIds.length} 项`)
   } catch { ElMessage.error('权限分配失败') }
@@ -188,13 +243,63 @@ onMounted(() => { fetchRoles() })
 </script>
 
 <style scoped>
-.role-manage { height:100%; display:flex; flex-direction:column; gap:16px; }
-.search-card { flex-shrink:0; } .search-card .el-form { margin-bottom:0; }
-.table-card { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-.toolbar-left { display:flex; gap:8px; }
-.pagination-wrap { display:flex; justify-content:flex-end; padding-top:16px; flex-shrink:0; }
-.dialog-form { padding-right:20px; }
-.batch-delete-text { font-size:15px; color:#374151; text-align:center; padding:16px 0; }
-.batch-delete-text strong { color:#ef4444; font-size:18px; }
+/* RoleManage 使用全局 .page-container / .page-header / .search-section / .table-section 样式 */
+
+/* 权限树容器 */
+.perm-tree-container {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+/* 权限分组 */
+.perm-group {
+  margin-bottom: 16px;
+  border: 1px solid #f0efed;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.perm-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #fafaf9;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1917;
+  border-bottom: 1px solid #f0efed;
+}
+
+.perm-group-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1917;
+}
+
+.perm-group-body {
+  padding: 8px 14px;
+}
+
+.perm-item {
+  padding: 6px 0;
+}
+
+.perm-item .el-checkbox {
+  display: flex;
+  align-items: center;
+  height: auto;
+}
+
+.perm-code {
+  font-size: 13px;
+  font-weight: 500;
+  color: #44403c;
+  margin-right: 8px;
+}
+
+.perm-desc {
+  font-size: 12px;
+  color: #a8a29e;
+}
 </style>

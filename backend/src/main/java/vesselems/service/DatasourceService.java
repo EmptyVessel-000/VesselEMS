@@ -21,6 +21,10 @@ public class DatasourceService {
         return datasourceRepository.findAll();
     }
 
+    public long count() {
+        return datasourceRepository.count();
+    }
+
     public Datasource getById(Long id) {
         return datasourceRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("数据源不存在"));

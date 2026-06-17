@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { checkAuth, userStore } from '../stores/user.js'
 import { hasMenu, loadPermissions, permissionStore, getDashboardPath } from '../stores/permissions.js'
-import { registerMenuRoutes } from './dynamicRoutes.js'
 
+const Index = () => import('../views/Index.vue')
 const Login = () => import('../views/Login.vue')
 const Register = () => import('../views/Register.vue')
 const Workspace = () => import('../views/workspace.vue')
@@ -11,7 +11,7 @@ const NotFound = () => import('../views/404.vue')
 const UserProfile = () => import('../views/workspace/UserProfile.vue')
 
 const routes = [
-  { path: '/', redirect: '/login' },
+  { path: '/', name: 'Index', component: Index, meta: { title: 'VesselEMS' } },
   { path: '/login', name: 'Login', component: Login, meta: { title: '登录' } },
   { path: '/register', name: 'Register', component: Register, meta: { title: '注册' } },
   { path: '/403', name: 'Forbidden', component: Forbidden, meta: { title: '无权限' } },
@@ -44,11 +44,8 @@ router.beforeEach(async (to, from, next) => {
       }
     }
 
-    // 加载权限并注册动态路由
-    if (!permissionStore.loaded) {
-      await loadPermissions()
-    }
-    registerMenuRoutes(router, permissionStore.menuTree)
+    // 动态路由已在 main.js 的 bootstrap() 中注册完成
+    // 这里只做权限校验
 
     // /workspace 自动跳转到第一个可用子页面
     if (to.path === '/workspace') {

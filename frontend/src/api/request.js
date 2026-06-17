@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '../router/index.js'
 
 const request = axios.create({
   baseURL: '',
@@ -40,9 +41,12 @@ request.interceptors.response.use(
       const status = error.response.status
       if (status === 401) {
         localStorage.removeItem('token')
-        if (window.location.pathname !== '/login') {
+        if (router.currentRoute.value.path !== '/login') {
           ElMessage.error('登录已过期，请重新登录')
-          window.location.href = '/login'
+          // 动态导入避免循环依赖
+          import('../router/dynamicRoutes.js').then(m => m.clearDynamicRoutes(router))
+          import('../stores/permissions.js').then(m => m.resetPermissions())
+          router.push('/login')
         } else {
           ElMessage.error(error.response.data?.message || '邮箱或密码错误')
         }

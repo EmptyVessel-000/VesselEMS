@@ -211,8 +211,12 @@ public class UserService {
         dto.setId(u.getId());
         dto.setUsername(u.getUsername());
         dto.setNickname(u.getNickname());
+        dto.setRealName(u.getRealName());
+        dto.setGender(u.getGender());
         dto.setEmail(u.getEmail());
         dto.setTelephone(u.getTelephone());
+        dto.setDepartmentId(u.getDepartmentId());
+        dto.setRemark(u.getRemark());
         dto.setStatus(u.getStatus());
         dto.setCreateTime(u.getCreateTime());
 

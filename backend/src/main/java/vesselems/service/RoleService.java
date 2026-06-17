@@ -1,11 +1,10 @@
 package vesselems.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 import vesselems.model.PermissionRole;
 import vesselems.model.Role;
@@ -76,7 +75,13 @@ public class RoleService {
     @Transactional
     public void assignMenus(Long roleId, List<Long> menuIds) {
         getRoleById(roleId);
-        roleMenuRepository.findByRoleId(roleId).forEach(rm -> roleMenuRepository.deleteById(rm.getId()));
+        // 批量删除旧记录
+        List<RoleMenu> oldMenus = roleMenuRepository.findByRoleId(roleId);
+        if (!oldMenus.isEmpty()) {
+            roleMenuRepository.deleteAll(oldMenus);
+            roleMenuRepository.flush();
+        }
+        // 插入新记录
         for (Long menuId : menuIds) {
             RoleMenu rm = new RoleMenu();
             rm.setRoleId(roleId);
@@ -88,7 +93,13 @@ public class RoleService {
     @Transactional
     public void assignPermissions(Long roleId, List<Long> permIds) {
         getRoleById(roleId);
-        permissionRoleRepository.findByRoleId(roleId).forEach(rp -> permissionRoleRepository.deleteById(rp.getId()));
+        // 批量删除旧记录
+        List<PermissionRole> oldPerms = permissionRoleRepository.findByRoleId(roleId);
+        if (!oldPerms.isEmpty()) {
+            permissionRoleRepository.deleteAll(oldPerms);
+            permissionRoleRepository.flush();
+        }
+        // 插入新记录
         for (Long permId : permIds) {
             PermissionRole rp = new PermissionRole();
             rp.setRoleId(roleId);

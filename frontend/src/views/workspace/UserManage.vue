@@ -1,23 +1,37 @@
 <template>
-  <div class="user-manage">
-    <el-card class="search-card" shadow="never">
+  <div class="page-container">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <h2 class="page-title">用户管理</h2>
+      <p class="page-subtitle">管理系统中的所有用户账号</p>
+    </div>
+
+    <!-- 搜索区 -->
+    <div class="search-section">
       <el-form :model="searchForm" inline>
-        <el-form-item label="用户名"><el-input v-model="searchForm.username" placeholder="请输入用户名" clearable /></el-form-item>
-        <el-form-item><el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button><el-button :icon="Refresh" @click="handleReset">重置</el-button></el-form-item>
+        <el-form-item label="用户名">
+          <el-input v-model="searchForm.username" placeholder="请输入用户名" clearable />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+          <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+        </el-form-item>
       </el-form>
-    </el-card>
-    <el-card class="table-card" shadow="never">
+    </div>
+
+    <!-- 表格区 -->
+    <div class="table-section">
       <div class="toolbar">
         <div class="toolbar-left">
           <el-button v-if="hasMenu(21) && hasPermission('user:create')" type="primary" :icon="Plus" @click="handleAdd">新增用户</el-button>
-          <el-button v-if="hasPermission('user:create')" type="success" :icon="Upload" @click="importVisible = true">导入用户</el-button>
+          <el-button v-if="hasPermission('user:create')" :icon="Upload" @click="importVisible = true">导入用户</el-button>
           <el-button v-if="hasMenu(21) && hasPermission('user:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length === 0" @click="handleBatchDelete">批量删除</el-button>
         </div>
         <div class="toolbar-right">
           <span class="selected-tip" v-if="selectedIds.length > 0">已选择 <strong>{{ selectedIds.length }}</strong> 项</span>
         </div>
       </div>
-      <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width: 100%" @selection-change="handleSelectionChange">
+      <el-table :data="pagedData" v-loading="tableLoading" stripe style="width: 100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="50" align="center" :selectable="(row) => !row.isSuperAdmin" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="username" label="用户名" width="110" />
@@ -27,7 +41,7 @@
           <template #default="{ row }">
             <div style="display:flex;flex-wrap:wrap;gap: 4px;justify-content:center;">
               <el-tag v-for="(name, idx) in row.roleNames" :key="idx" :type="name === 'super_admin' ? 'danger' : ''" size="small">{{ name }}</el-tag>
-              <span v-if="!row.roleNames || row.roleNames.length === 0" style="color:#9ca3af">—</span>
+              <span v-if="!row.roleNames || row.roleNames.length === 0" style="color:#a8a29e">—</span>
             </div>
           </template>
         </el-table-column>
@@ -54,8 +68,9 @@
       <div class="pagination-wrap">
         <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10,20,50]" :total="filteredData.length" layout="total,sizes,prev,pager,next,jumper" background @size-change="handleSizeChange" />
       </div>
-    </el-card>
+    </div>
 
+    <!-- 新增/编辑对话框 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="560px" :close-on-click-modal="false" @close="handleDialogClose">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px" class="dialog-form">
         <el-form-item label="用户名" prop="username"><el-input v-model="formData.username" /></el-form-item>
@@ -87,11 +102,13 @@
       <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button></template>
     </el-dialog>
 
+    <!-- 批量删除确认 -->
     <el-dialog v-model="batchDeleteVisible" title="批量删除确认" width="420px" :close-on-click-modal="false">
       <p class="batch-delete-text">确定要删除选中的 <strong>{{ selectedIds.length }}</strong> 个用户吗？</p>
       <template #footer><el-button @click="batchDeleteVisible=false">取消</el-button><el-button type="danger" :loading="batchLoading" @click="confirmBatchDelete">确定删除</el-button></template>
     </el-dialog>
 
+    <!-- 导入用户 -->
     <el-dialog v-model="importVisible" title="导入用户" width="500px" :close-on-click-modal="false" @close="resetImport">
       <div style="margin-bottom:16px">
         <el-upload
@@ -176,7 +193,6 @@ async function fetchUsers() {
   try {
     const data = await request.get('/api/users')
     allUsers.value = (data || []).map(u => {
-      // Prefer backend-provided roleIds/roleNames/isSuperAdmin from UserResponseDto
       const roleIds = u.roleIds || []
       const roleNames = u.roleNames && u.roleNames.length
         ? u.roleNames
@@ -184,7 +200,6 @@ async function fetchUsers() {
       const isSuperAdmin = u.isSuperAdmin !== undefined
         ? u.isSuperAdmin
         : hasSuperAdminRole(roleIds)
-      // Format createTime
       let createTimeStr = ''
       if (u.createTime) {
         if (Array.isArray(u.createTime)) {
@@ -196,8 +211,13 @@ async function fetchUsers() {
       }
       return {
         id: u.id, username: u.username || '', nickname: u.nickname || '', email: u.email || '',
+        realName: u.realName || '',
+        gender: u.gender != null ? u.gender : 0,
+        telephone: u.telephone || '',
+        departmentId: u.departmentId || null,
+        remark: u.remark || '',
         roleIds, roleNames, isSuperAdmin,
-        status: u.status !== undefined ? u.status : 1, telephone: u.telephone || '',
+        status: u.status !== undefined ? u.status : 1,
         createTime: createTimeStr,
         _raw: u
       }
@@ -308,7 +328,6 @@ async function handleImport() {
     fd.append('file', importFile.value)
     const token = localStorage.getItem('token')
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
-    // Use fetch natively so Content-Type is automatically multipart/form-data
     const resp = await fetch('/api/users/import', { method: 'POST', headers, body: fd })
     const json = await resp.json()
     const d = json.data !== undefined ? json.data : json
@@ -330,14 +349,5 @@ onMounted(async () => { await fetchRoles(); await fetchDepts(); await fetchUsers
 </script>
 
 <style scoped>
-.user-manage { height: 100%; display: flex; flex-direction: column; gap: 16px; }
-.search-card { flex-shrink: 0; } .search-card .el-form { margin-bottom: 0; }
-.table-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.toolbar-left { display: flex; gap: 8px; }
-.selected-tip { font-size: 13px; color: #6b7280; } .selected-tip strong { color: #2563eb; }
-.pagination-wrap { display: flex; justify-content: flex-end; padding-top: 16px; flex-shrink: 0; }
-.dialog-form { padding-right: 20px; }
-.batch-delete-text { font-size: 15px; color: #374151; text-align: center; padding: 16px 0; }
-.batch-delete-text strong { color: #ef4444; font-size: 18px; }
+/* UserManage 使用全局 .page-container / .page-header / .search-section / .table-section 样式 */
 </style>

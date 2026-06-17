@@ -1,10 +1,12 @@
 <template>
   <el-container class="main-layout">
     <!-- 侧边栏 -->
-    <el-aside :width="isCollapse ? '64px' : '220px'" class="main-aside">
-      <!-- Logo 区域 -->
-      <div class="aside-logo">
-        <el-icon :size="28"><Ship /></el-icon>
+    <el-aside :width="isCollapse ? '56px' : '200px'" class="main-aside">
+      <!-- Logo 区域 — 点击返回首页 -->
+      <div class="aside-logo" @click="goHome">
+        <div class="logo-icon">
+          <el-icon :size="22"><Ship /></el-icon>
+        </div>
         <span v-show="!isCollapse" class="logo-text">VesselEMS</span>
       </div>
 
@@ -14,9 +16,6 @@
         :collapse="isCollapse"
         :collapse-transition="false"
         router
-        background-color="#1e293b"
-        text-color="#cbd5e1"
-        active-text-color="#ffffff"
         class="aside-menu"
       >
         <template v-for="node in visibleMenus" :key="node.id">
@@ -54,6 +53,14 @@
           </el-sub-menu>
         </template>
       </el-menu>
+
+      <!-- 底部折叠按钮 -->
+      <div class="aside-footer">
+        <el-icon class="collapse-btn" :size="18" @click="isCollapse = !isCollapse">
+          <Fold v-if="!isCollapse" />
+          <Expand v-else />
+        </el-icon>
+      </div>
     </el-aside>
 
     <!-- 右侧区域 -->
@@ -61,15 +68,6 @@
       <!-- 顶部导航栏 -->
       <el-header class="main-header">
         <div class="header-left">
-          <el-icon
-            class="collapse-btn"
-            :size="22"
-            @click="isCollapse = !isCollapse"
-          >
-            <Fold v-if="!isCollapse" />
-            <Expand v-else />
-          </el-icon>
-
           <el-breadcrumb separator="/">
             <el-breadcrumb-item :to="dashboardPath">首页</el-breadcrumb-item>
             <el-breadcrumb-item v-if="breadcrumbTitle">{{ breadcrumbTitle }}</el-breadcrumb-item>
@@ -79,7 +77,7 @@
         <div class="header-right">
           <el-dropdown trigger="hover">
             <div class="user-avatar-area">
-              <el-avatar :size="32" :icon="UserFilled" />
+              <el-avatar :size="32" :icon="UserFilled" class="user-avatar" />
               <span class="user-name">{{ displayName }}</span>
               <el-icon class="arrow-icon"><ArrowDown /></el-icon>
             </div>
@@ -186,6 +184,10 @@ function resolvePath(node) {
   return `/workspace/${node.menuPath}`
 }
 
+function goHome() {
+  router.push('/')
+}
+
 function goProfile() {
   router.push('/workspace/profile')
 }
@@ -196,9 +198,7 @@ function handleLogout() {
 }
 
 onMounted(() => {
-  if (!permissionStore.loaded) {
-    loadPermissions()
-  }
+  // 权限和路由已在 App.vue 启动时加载，此处不再重复加载
 })
 </script>
 
@@ -208,27 +208,39 @@ onMounted(() => {
   overflow: hidden;
 }
 
+/* ===== 侧边栏 ===== */
 .main-aside {
-  background: #1e293b;
-  transition: width 0.3s;
+  background: #fcfcfb;
+  border-right: 1px solid #f0efed;
+  transition: width 0.3s ease;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .aside-logo {
-  height: 60px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #3b82f6;
-  border-bottom: 1px solid #334155;
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
   flex-shrink: 0;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.aside-logo:hover {
+  opacity: 0.9;
+}
+
+.logo-icon {
+  color: #ffffff;
+  display: flex;
+  align-items: center;
 }
 
 .logo-text {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #ffffff;
   letter-spacing: 1px;
@@ -236,31 +248,85 @@ onMounted(() => {
 }
 
 .aside-menu {
-  border-right: none;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  background: transparent;
+  padding: 4px 0;
+  border-right: none;
 }
 
-.aside-menu .el-sub-menu .el-menu {
-  background-color: #0f172a;
+.aside-menu .el-menu-item {
+  margin: 1px 6px;
+  border-radius: 6px;
+  color: #57534e;
+  height: 36px;
+  line-height: 36px;
+  font-size: 13px;
 }
 
 .aside-menu .el-menu-item:hover {
-  background-color: #334155;
+  background-color: #f0efed;
+  color: #1c1917;
 }
 
 .aside-menu .el-menu-item.is-active {
-  background-color: #2563eb;
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
 }
 
+.aside-menu .el-sub-menu__title {
+  margin: 1px 6px;
+  border-radius: 6px;
+  color: #57534e;
+  height: 36px;
+  line-height: 36px;
+  font-size: 13px;
+}
+
+.aside-menu .el-sub-menu__title:hover {
+  background-color: #f0efed;
+  color: #1c1917;
+}
+
+.aside-menu .el-menu--inline .el-menu-item {
+  margin: 1px 6px 1px 20px;
+  font-size: 12px;
+  height: 32px;
+  line-height: 32px;
+}
+
+.aside-footer {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid #f0efed;
+  flex-shrink: 0;
+}
+
+.collapse-btn {
+  cursor: pointer;
+  color: #a8a29e;
+  transition: color 0.2s;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.collapse-btn:hover {
+  color: #2563eb;
+  background-color: #f0efed;
+}
+
+/* ===== 顶栏 ===== */
 .main-header {
-  height: 60px;
+  height: 56px;
   background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #f0efed;
   padding: 0 20px;
 }
 
@@ -268,16 +334,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
-}
-
-.collapse-btn {
-  cursor: pointer;
-  color: #6b7280;
-  transition: color 0.2s;
-}
-
-.collapse-btn:hover {
-  color: #2563eb;
 }
 
 .header-right {
@@ -291,26 +347,33 @@ onMounted(() => {
   gap: 8px;
   cursor: pointer;
   padding: 4px 8px;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: background 0.2s;
 }
 
 .user-avatar-area:hover {
-  background: #f1f5f9;
+  background: #f5f5f4;
+}
+
+.user-avatar {
+  background: #eff6ff;
+  color: #2563eb;
 }
 
 .user-name {
-  font-size: 14px;
-  color: #374151;
+  font-size: 13px;
+  color: #1c1917;
+  font-weight: 500;
 }
 
 .arrow-icon {
-  color: #9ca3af;
+  color: #a8a29e;
   font-size: 12px;
 }
 
+/* ===== 内容区 ===== */
 .main-content {
-  background: #f1f5f9;
+  background: #f5f5f4;
   padding: 20px;
   overflow-y: auto;
 }

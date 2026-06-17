@@ -23,6 +23,10 @@ public class MenuService {
         return menuRepository.findAll();
     }
 
+    public long countByType(int menuType) {
+        return menuRepository.findAll().stream().filter(m -> m.getMenuType() == menuType).count();
+    }
+
     public List<Menu> listByParentId(Long parentId) {
         return menuRepository.findByParentIdOrderBySortOrder(parentId);
     }

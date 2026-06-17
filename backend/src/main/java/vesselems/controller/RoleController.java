@@ -1,6 +1,10 @@
 package vesselems.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,10 +15,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import vesselems.common.ApiResponse;
+import vesselems.annotation.OperateLog;
+import vesselems.model.Menu;
+import vesselems.model.MenuPermission;
+import vesselems.model.Permission;
 import vesselems.model.PermissionRole;
 import vesselems.model.Role;
 import vesselems.model.RoleMenu;
+import vesselems.repository.MenuPermissionRepository;
+import vesselems.repository.MenuRepository;
+import vesselems.repository.PermissionRepository;
 import vesselems.service.RoleService;
 
 @RestController
@@ -22,56 +32,121 @@ import vesselems.service.RoleService;
 public class RoleController {
 
     private final RoleService roleService;
+    private final MenuRepository menuRepository;
+    private final MenuPermissionRepository menuPermissionRepository;
+    private final PermissionRepository permissionRepository;
 
-    public RoleController(RoleService roleService) {
+    public RoleController(RoleService roleService,
+            MenuRepository menuRepository,
+            MenuPermissionRepository menuPermissionRepository,
+            PermissionRepository permissionRepository) {
         this.roleService = roleService;
+        this.menuRepository = menuRepository;
+        this.menuPermissionRepository = menuPermissionRepository;
+        this.permissionRepository = permissionRepository;
     }
 
     @GetMapping
-    public ApiResponse<List<Role>> list() {
-        return ApiResponse.success(roleService.listRoles());
+    public List<Role> listRoles() {
+        return roleService.listRoles();
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<Role> getById(@PathVariable Long id) {
-        return ApiResponse.success(roleService.getRoleById(id));
+    public Role getRole(@PathVariable Long id) {
+        return roleService.getRoleById(id);
     }
 
     @PostMapping
-    public ApiResponse<Role> create(@RequestBody Role role) {
-        return ApiResponse.success(roleService.createRole(role));
+    @OperateLog(module = "角色管理", operation = "新增角色")
+    public Role createRole(@RequestBody Role role) {
+        return roleService.createRole(role);
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<Role> update(@PathVariable Long id, @RequestBody Role role) {
-        return ApiResponse.success(roleService.updateRole(id, role));
+    @OperateLog(module = "角色管理", operation = "修改角色")
+    public Role updateRole(@PathVariable Long id, @RequestBody Role role) {
+        return roleService.updateRole(id, role);
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id) {
+    @OperateLog(module = "角色管理", operation = "删除角色")
+    public void deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
-        return ApiResponse.success(null);
     }
 
     @PostMapping("/{id}/menus")
-    public ApiResponse<Void> assignMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
+    @OperateLog(module = "角色管理", operation = "分配菜单")
+    public void assignMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
         roleService.assignMenus(id, menuIds);
-        return ApiResponse.success(null);
     }
 
     @PostMapping("/{id}/permissions")
-    public ApiResponse<Void> assignPermissions(@PathVariable Long id, @RequestBody List<Long> permIds) {
+    @OperateLog(module = "角色管理", operation = "分配权限")
+    public void assignPermissions(@PathVariable Long id, @RequestBody List<Long> permIds) {
         roleService.assignPermissions(id, permIds);
-        return ApiResponse.success(null);
     }
 
-    @GetMapping("/{id}/menus")
-    public ApiResponse<List<RoleMenu>> getMenus(@PathVariable Long id) {
-        return ApiResponse.success(roleService.getRoleMenus(id));
+    @PostMapping("/{id}/permissions")
+    public void assignPermissions(@PathVariable Long id, @RequestBody List<Long> permIds) {
+        roleService.assignPermissions(id, permIds);
     }
 
     @GetMapping("/{id}/permissions")
-    public ApiResponse<List<PermissionRole>> getPermissions(@PathVariable Long id) {
-        return ApiResponse.success(roleService.getRolePermissions(id));
+    public List<PermissionRole> getRolePermissions(@PathVariable Long id) {
+        return roleService.getRolePermissions(id);
+    }
+
+    /**
+     * 获取按菜单分组的权限树，标记当前角色已分配的权限
+     */
+    @GetMapping("/{id}/permissions/tree")
+    public List<Map<String, Object>> getPermissionTree(@PathVariable Long id) {
+        // 获取当前角色已分配的权限ID集合
+        List<PermissionRole> rolePerms = roleService.getRolePermissions(id);
+        var assignedPermIds = rolePerms.stream()
+                .map(PermissionRole::getPermissionId)
+                .collect(Collectors.toSet());
+
+        // 获取所有菜单（只取页面类型，即 menuType=1）
+        List<Menu> allMenus = menuRepository.findAll().stream()
+                .filter(m -> m.getMenuType() != null && m.getMenuType() == 1)
+                .collect(Collectors.toList());
+
+        // 构建菜单ID -> 菜单名映射
+        Map<Long, String> menuNameMap = new HashMap<>();
+        for (Menu m : allMenus) {
+            menuNameMap.put(m.getId(), m.getMenuName());
+        }
+
+        // 按菜单分组权限
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Menu menu : allMenus) {
+            List<MenuPermission> mpList = menuPermissionRepository.findByMenuId(menu.getId());
+            if (mpList.isEmpty())
+                continue;
+
+            List<Map<String, Object>> permList = new ArrayList<>();
+            for (MenuPermission mp : mpList) {
+                Permission perm = permissionRepository.findById(mp.getPermissionId()).orElse(null);
+                if (perm == null)
+                    continue;
+                Map<String, Object> permItem = new HashMap<>();
+                permItem.put("id", perm.getId());
+                permItem.put("permissionCode", perm.getPermissionCode());
+                permItem.put("description", perm.getDescription());
+                permItem.put("checked", assignedPermIds.contains(perm.getId()));
+                permList.add(permItem);
+            }
+
+            if (!permList.isEmpty()) {
+                Map<String, Object> group = new HashMap<>();
+                group.put("menuId", menu.getId());
+                group.put("menuName", menu.getMenuName());
+                group.put("permissions", permList);
+                result.add(group);
+            }
+        }
+
+        return result;
     }
 }

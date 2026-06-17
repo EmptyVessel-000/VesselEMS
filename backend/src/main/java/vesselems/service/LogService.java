@@ -48,6 +48,10 @@ public class LogService {
         return logRepository.findByCreateTimeBetweenOrderByCreateTimeDesc(start, end);
     }
 
+    public List<Log> getRecentActivities() {
+        return logRepository.findTop10ByOrderByCreateTimeDesc();
+    }
+
     public void cleanOldLogs(int days) {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
         List<Log> oldLogs = logRepository.findByCreateTimeBetweenOrderByCreateTimeDesc(

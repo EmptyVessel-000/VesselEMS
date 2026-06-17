@@ -13,8 +13,6 @@ export const permissionStore = reactive({
 
 export function hasMenu(menuId) {
   if (permissionStore.menus.includes(-1)) return true
-  // 用户中心及子菜单对所有用户可见
-  if (menuId === 6 || menuId === 61) return true
   return permissionStore.menus.includes(menuId)
 }
 

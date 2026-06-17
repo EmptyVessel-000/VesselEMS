@@ -1,19 +1,23 @@
 <template>
-  <div class="system-config">
-    <el-card class="search-card" shadow="never">
+  <div class="page-container">
+    <div class="page-header">
+      <h2 class="page-title">系统配置</h2>
+      <p class="page-subtitle">管理系统运行参数与配置项</p>
+    </div>
+    <div class="search-section">
       <el-form :model="searchForm" inline>
         <el-form-item label="配置键"><el-input v-model="searchForm.configKey" placeholder="请输入配置键" clearable /></el-form-item>
         <el-form-item><el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button><el-button :icon="Refresh" @click="handleReset">重置</el-button></el-form-item>
       </el-form>
-    </el-card>
-    <el-card class="table-card" shadow="never">
+    </div>
+    <div class="table-section">
       <div class="toolbar">
         <div class="toolbar-left">
           <el-button v-if="hasPermission('config:create')" type="primary" :icon="Plus" @click="handleAdd">新增配置</el-button>
           <el-button v-if="hasPermission('config:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button>
         </div>
       </div>
-      <el-table :data="pagedData" v-loading="tableLoading" stripe border style="width:100%" @selection-change="handleSelectionChange">
+      <el-table :data="pagedData" v-loading="tableLoading" stripe style="width:100%" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="configKey" label="配置键" min-width="180" />
@@ -39,7 +43,7 @@
         </el-table-column>
       </el-table>
       <div class="pagination-wrap"><el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[10,20,50]" :total="filteredData.length" layout="total,sizes,prev,pager,next,jumper" background @size-change="handleSizeChange" /></div>
-    </el-card>
+    </div>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="560px" :close-on-click-modal="false" @close="handleDialogClose">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="80px" class="dialog-form">
@@ -128,13 +132,5 @@ onMounted(() => { fetchConfigs() })
 </script>
 
 <style scoped>
-.system-config { height:100%; display:flex; flex-direction:column; gap:16px; }
-.search-card { flex-shrink:0; } .search-card .el-form { margin-bottom:0; }
-.table-card { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-.toolbar-left { display:flex; gap:8px; }
-.pagination-wrap { display:flex; justify-content:flex-end; padding-top:16px; flex-shrink:0; }
-.dialog-form { padding-right:20px; }
-.batch-delete-text { font-size:15px; color:#374151; text-align:center; padding:16px 0; }
-.batch-delete-text strong { color:#ef4444; font-size:18px; }
+/* ConfigManage 使用全局 .page-container / .page-header / .search-section / .table-section 样式 */
 </style>

@@ -21,6 +21,10 @@ public class ModelService {
         return modelRepository.findAll();
     }
 
+    public long count() {
+        return modelRepository.count();
+    }
+
     public Model getById(Long id) {
         return modelRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("模型不存在"));

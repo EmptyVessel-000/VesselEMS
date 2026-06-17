@@ -317,34 +317,34 @@ onMounted(fetchLibraries)
 </script>
 
 <style scoped>
-.rag-knowledge { height: 100%; display: flex; overflow: hidden; }
-.lib-sidebar { width: 260px; background: #fff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; flex-shrink: 0; }
-.lib-sidebar-header { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+.rag-knowledge { height: 100%; display: flex; overflow: hidden; background: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); }
+.lib-sidebar { width: 260px; background: #fff; border-right: 1px solid #f0efed; display: flex; flex-direction: column; flex-shrink: 0; }
+.lib-sidebar-header { padding: 12px; border-bottom: 1px solid #f0efed; }
 .lib-list { flex: 1; overflow-y: auto; }
-.lib-item { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9; position: relative; }
-.lib-item:hover { background: #f8fafc; }
-.lib-item.active { background: #eff6ff; border-left: 3px solid #2563eb; }
-.lib-item-main { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #1e293b; }
+.lib-item { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #f5f5f4; position: relative; }
+.lib-item:hover { background: #fafaf9; }
+.lib-item.active { background: #eef2ff; border-left: 3px solid #4f46e5; }
+.lib-item-main { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #1c1917; }
 .lib-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-.lib-item-meta { font-size: 12px; color: #9ca3af; margin-top: 4px; margin-left: 26px; }
+.lib-item-meta { font-size: 12px; color: #a8a29e; margin-top: 4px; margin-left: 26px; }
 .lib-item-actions { position: absolute; right: 8px; top: 10px; display: none; }
 .lib-item:hover .lib-item-actions { display: flex; gap: 2px; }
 
-.content-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f8fafc; }
-.content-header { padding: 12px 16px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; }
-.content-header-left { display: flex; align-items: center; gap: 8px; color: #1e293b; }
+.content-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #fafaf9; }
+.content-header { padding: 12px 16px; background: #fff; border-bottom: 1px solid #f0efed; display: flex; align-items: center; justify-content: space-between; }
+.content-header-left { display: flex; align-items: center; gap: 8px; color: #1c1917; }
 .content-lib-name { font-size: 16px; font-weight: 600; }
-.content-lib-desc { font-size: 13px; color: #6b7280; }
+.content-lib-desc { font-size: 13px; color: #78716c; }
 .content-header-right { display: flex; gap: 8px; }
 .content-table { flex: 1; overflow-y: auto; padding: 16px; }
-.content-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #9ca3af; gap: 12px; }
+.content-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a8a29e; gap: 12px; }
 
 .annotation-panel { padding: 8px 0; }
-.annotation-item { padding: 6px 12px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 10px; align-items: flex-start; }
-.annotation-index { font-size: 12px; color: #6b7280; min-width: 50px; font-weight: 600; }
+.annotation-item { padding: 6px 12px; border-bottom: 1px solid #f5f5f4; display: flex; gap: 10px; align-items: flex-start; }
+.annotation-index { font-size: 12px; color: #78716c; min-width: 50px; font-weight: 600; }
 .annotation-index.annotation-image { color: #0891b2; }
-.annotation-text { font-size: 13px; color: #374151; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+.annotation-text { font-size: 13px; color: #57534e; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
 
-.upload-text { margin-top: 8px; font-size: 13px; color: #6b7280; }
-.upload-tip { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+.upload-text { margin-top: 8px; font-size: 13px; color: #78716c; }
+.upload-tip { font-size: 12px; color: #a8a29e; margin-top: 4px; }
 </style>

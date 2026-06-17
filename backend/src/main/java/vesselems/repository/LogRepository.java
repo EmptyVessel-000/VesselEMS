@@ -18,4 +18,6 @@ public interface LogRepository extends JpaRepository<Log, Long> {
     List<Log> findByOperationOrderByCreateTimeDesc(String operation);
 
     List<Log> findByCreateTimeBetweenOrderByCreateTimeDesc(LocalDateTime start, LocalDateTime end);
+
+    List<Log> findTop10ByOrderByCreateTimeDesc();
 }
