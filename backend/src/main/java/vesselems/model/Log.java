@@ -7,7 +7,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 @Entity
@@ -39,11 +38,9 @@ public class Log {
     @Column(name = "method_name", length = 256)
     private String methodName;
 
-    @Lob
     @Column(name = "request_params", columnDefinition = "TEXT")
     private String requestParams;
 
-    @Lob
     @Column(name = "response_data", columnDefinition = "TEXT")
     private String responseData;
 
@@ -59,7 +56,6 @@ public class Log {
     @Column(name = "status")
     private Integer status;
 
-    @Lob
     @Column(name = "error_msg", columnDefinition = "TEXT")
     private String errorMsg;
 

@@ -118,8 +118,14 @@
         </h3>
         <div class="activity-list" v-loading="activityLoading">
           <div v-for="item in activities" :key="item.id" class="activity-item">
+            <div class="activity-dot" :class="item.status === 1 ? 'dot-success' : 'dot-error'"></div>
             <span class="activity-user">{{ item.username }}</span>
+            <span class="activity-module-tag">{{ item.module }}</span>
             <span class="activity-action">{{ item.operation }}</span>
+            <el-tag v-if="item.status === 0" type="danger" size="small" class="activity-status">失败</el-tag>
+            <span v-if="item.ip" class="activity-ip">{{ item.ip }}</span>
+            <span class="activity-spacer"></span>
+            <span v-if="item.duration != null" class="activity-duration">{{ item.duration }}ms</span>
             <span class="activity-time">{{ formatTime(item.createTime) }}</span>
           </div>
           <el-empty v-if="activities.length === 0 && !activityLoading" description="暂无活动记录" :image-size="60" />
@@ -177,12 +183,7 @@ function formatTime(t) {
   if (!t) return ''
   try {
     const d = new Date(t)
-    const now = new Date()
-    const diff = now - d
-    if (diff < 60000) return '刚刚'
-    if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`
-    return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
   } catch {
     return t
   }
@@ -427,34 +428,76 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px solid #f5f5f4;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .activity-item:last-child {
   border-bottom: none;
 }
 
+.activity-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-success {
+  background: #10b981;
+}
+
+.dot-error {
+  background: #ef4444;
+}
+
 .activity-user {
   font-weight: 600;
   color: #2563eb;
-  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.activity-module-tag {
+  font-size: 11px;
+  color: #78716c;
+  background: #f5f5f4;
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
 
 .activity-action {
   color: #44403c;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .activity-time {
   color: #a8a29e;
   font-size: 12px;
-  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.activity-duration {
+  color: #10b981;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.activity-status {
+  flex-shrink: 0;
+}
+
+.activity-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-ip {
+  color: #d6d3d1;
+  font-size: 11px;
   flex-shrink: 0;
 }
 

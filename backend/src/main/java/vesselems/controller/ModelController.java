@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import vesselems.annotation.OperateLog;
 import vesselems.common.ApiResponse;
 import vesselems.model.Model;
 import vesselems.service.ModelService;
@@ -36,16 +37,19 @@ public class ModelController {
     }
 
     @PostMapping
+    @OperateLog(module = "模型管理", operation = "新增模型")
     public ApiResponse<Model> create(@RequestBody Model m) {
         return ApiResponse.success(modelService.create(m));
     }
 
     @PutMapping("/{id}")
+    @OperateLog(module = "模型管理", operation = "修改模型")
     public ApiResponse<Model> update(@PathVariable Long id, @RequestBody Model m) {
         return ApiResponse.success(modelService.update(id, m));
     }
 
     @DeleteMapping("/{id}")
+    @OperateLog(module = "模型管理", operation = "删除模型")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         modelService.deleteById(id);
         return ApiResponse.success(null);

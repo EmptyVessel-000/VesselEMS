@@ -19,8 +19,8 @@
           </div>
           <div class="lib-item-meta">{{ lib.documentCount ?? 0 }} 个文件</div>
           <div class="lib-item-actions" @click.stop>
-            <el-button :icon="Edit" link size="small" @click="handleEditLib(lib)"></el-button>
-            <el-popconfirm title="将同时删除该文库下所有文件和标注数据，确定？" @confirm="handleDelLib(lib)">
+            <el-button v-if="hasPermission('rag:lib:edit')" :icon="Edit" link size="small" @click="handleEditLib(lib)"></el-button>
+            <el-popconfirm v-if="hasPermission('rag:lib:delete')" title="将同时删除该文库下所有文件和标注数据，确定？" @confirm="handleDelLib(lib)">
               <template #reference><el-button :icon="Delete" link size="small"></el-button></template>
             </el-popconfirm>
           </div>
@@ -39,7 +39,7 @@
           <span class="content-lib-desc" v-if="selectedLib.description">{{ selectedLib.description }}</span>
         </div>
         <div class="content-header-right">
-          <el-button :icon="Upload" size="small" @click="uploadVisible = true">上传</el-button>
+          <el-button v-if="hasPermission('rag:doc:upload')" :icon="Upload" size="small" @click="uploadVisible = true">上传</el-button>
           <el-button :icon="Refresh" size="small" @click="fetchDocuments" :loading="docLoading">刷新状态</el-button>
         </div>
       </div>
@@ -67,7 +67,7 @@
           <el-table-column label="操作" width="100" align="center" fixed="right">
             <template #default="{ row }">
               <el-button type="primary" size="small" link @click="toggleAnnotations(row)">详情</el-button>
-              <el-popconfirm title="将同时删除标注和向量数据，确定？" @confirm="handleDelDoc(row)">
+              <el-popconfirm v-if="hasPermission('rag:doc:delete')" title="将同时删除标注和向量数据，确定？" @confirm="handleDelDoc(row)">
                 <template #reference><el-button type="danger" size="small" link>删除</el-button></template>
               </el-popconfirm>
             </template>

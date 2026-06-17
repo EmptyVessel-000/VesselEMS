@@ -1,13 +1,13 @@
 <template>
   <div class="dialog-history">
     <el-card class="table-card" shadow="never">
-      <el-table :data="sessions" v-loading="loading" stripe border style="width: 100%">
+      <el-table :data="sessions" v-loading="loading" stripe border style="width: 100%" @sort-change="handleSortChange" :default-sort="{ prop: 'firstTime', order: 'descending' }">
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column label="首条问题" min-width="200" show-overflow-tooltip>
+        <el-table-column label="首条问题" min-width="200" show-overflow-tooltip sortable>
           <template #default="{ row }">{{ row.firstQuestion || '-' }}</template>
         </el-table-column>
-        <el-table-column prop="count" label="消息数" width="80" align="center" />
-        <el-table-column label="创建时间" width="160">
+        <el-table-column prop="count" label="消息数" width="80" align="center" sortable />
+        <el-table-column label="创建时间" width="160" sortable>
           <template #default="{ row }">{{ fmtTime(row.firstTime) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="140" align="center" fixed="right">
@@ -45,6 +45,10 @@ import request from '../../api/request.js'
 import { hasPermission } from '../../stores/permissions.js'
 
 const sessions = ref([]), loading = ref(false)
+
+function handleSortChange(sort) {
+  // 交给 el-table 的 sortable 属性处理
+}
 
 async function fetchSessions() {
   loading.value = true

@@ -54,6 +54,12 @@ public class DashboardController {
             m.put("username", log.getUsername() != null ? log.getUsername() : "");
             m.put("module", log.getModule() != null ? log.getModule() : "");
             m.put("operation", log.getOperation() != null ? log.getOperation() : "");
+            m.put("status", log.getStatus());
+            m.put("duration", log.getDuration());
+            m.put("errorMsg", log.getErrorMsg());
+            m.put("ip", log.getIp() != null ? log.getIp() : "");
+            m.put("requestUrl", log.getRequestUrl() != null ? log.getRequestUrl() : "");
+            m.put("requestMethod", log.getRequestMethod() != null ? log.getRequestMethod() : "");
             m.put("createTime", log.getCreateTime() != null ? log.getCreateTime().toString() : "");
             return m;
         }).collect(Collectors.toList());

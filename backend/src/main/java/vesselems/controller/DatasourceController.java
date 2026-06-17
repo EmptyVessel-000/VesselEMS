@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import vesselems.annotation.OperateLog;
 import vesselems.common.ApiResponse;
 import vesselems.model.Datasource;
 import vesselems.service.DSManager;
@@ -43,11 +44,13 @@ public class DatasourceController {
     }
 
     @PostMapping
+    @OperateLog(module = "数据源管理", operation = "新增数据源")
     public ApiResponse<Datasource> create(@RequestBody Datasource ds) {
         return ApiResponse.success(datasourceService.create(ds));
     }
 
     @PutMapping("/{id}")
+    @OperateLog(module = "数据源管理", operation = "修改数据源")
     public ApiResponse<Datasource> update(@PathVariable Long id, @RequestBody Datasource ds) {
         Datasource updated = datasourceService.update(id, ds);
         dsManager.evict(id);
@@ -55,6 +58,7 @@ public class DatasourceController {
     }
 
     @DeleteMapping("/{id}")
+    @OperateLog(module = "数据源管理", operation = "删除数据源")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         dsManager.evict(id);
         datasourceService.deleteById(id);
@@ -62,6 +66,7 @@ public class DatasourceController {
     }
 
     @PostMapping("/{id}/test")
+    @OperateLog(module = "数据源管理", operation = "测试连接")
     public ApiResponse<Boolean> test(@PathVariable Long id) {
         Datasource ds = datasourceService.getById(id);
         return ApiResponse.success(dsManager.test(ds));

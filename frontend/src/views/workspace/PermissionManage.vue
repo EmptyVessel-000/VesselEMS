@@ -25,15 +25,15 @@
           <span class="selected-tip" v-if="selectedIds.length > 0">已选择 <strong>{{ selectedIds.length }}</strong> 项</span>
         </div>
       </div>
-      <el-table :data="pagedData" v-loading="loading" stripe style="width:100%" @selection-change="handleSelectionChange">
+      <el-table :data="pagedData" v-loading="loading" stripe style="width:100%" @selection-change="handleSelectionChange" @sort-change="handleSortChange" :default-sort="{ prop: 'sortOrder', order: 'ascending' }">
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="permissionCode" label="权限标识" min-width="180">
+        <el-table-column prop="permissionCode" label="权限标识" min-width="180" sortable>
           <template #default="{ row }"><el-tag size="small">{{ row.permissionCode }}</el-tag></template>
         </el-table-column>
-        <el-table-column prop="description" label="权限描述" min-width="250" show-overflow-tooltip />
-        <el-table-column prop="sortOrder" label="排序" width="80" align="center" />
-        <el-table-column label="创建时间" width="170">
+        <el-table-column prop="description" label="权限描述" min-width="250" show-overflow-tooltip sortable />
+        <el-table-column prop="sortOrder" label="排序" width="80" align="center" sortable />
+        <el-table-column label="创建时间" width="170" sortable>
           <template #default="{ row }">{{ row.createTime || '-' }}</template>
         </el-table-column>
         <el-table-column label="操作" width="160" align="center" fixed="right">
@@ -88,6 +88,9 @@ const pagedData = computed(() => {
   return filteredList.value.slice(s, s + size.value)
 })
 
+function handleSortChange(sort) {
+  // 交给 el-table 的 sortable 属性处理
+}
 function handleSearch() { page.value = 1 }
 function handleReset() { searchForm.keyword = ''; page.value = 1 }
 function handleSelectionChange(rows) { selectedIds.value = rows.map(r => r.id) }

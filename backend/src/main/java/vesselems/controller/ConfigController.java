@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import vesselems.annotation.OperateLog;
 import vesselems.common.ApiResponse;
 import vesselems.model.Config;
 import vesselems.service.ConfigService;
@@ -36,16 +37,19 @@ public class ConfigController {
     }
 
     @PostMapping
+    @OperateLog(module = "系统配置", operation = "新增配置")
     public ApiResponse<Config> create(@RequestBody Config config) {
         return ApiResponse.success(configService.createConfig(config));
     }
 
     @PutMapping("/{id}")
+    @OperateLog(module = "系统配置", operation = "修改配置")
     public ApiResponse<Config> update(@PathVariable Long id, @RequestBody Config config) {
         return ApiResponse.success(configService.updateConfig(id, config));
     }
 
     @DeleteMapping("/{id}")
+    @OperateLog(module = "系统配置", operation = "删除配置")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         configService.deleteConfig(id);
         return ApiResponse.success(null);

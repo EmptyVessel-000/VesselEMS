@@ -23,20 +23,20 @@
     <div class="table-section">
       <div class="toolbar">
         <div class="toolbar-left">
-          <el-button v-if="hasMenu(21) && hasPermission('user:create')" type="primary" :icon="Plus" @click="handleAdd">新增用户</el-button>
+          <el-button v-if="hasPermission('user:create')" type="primary" :icon="Plus" @click="handleAdd">新增用户</el-button>
           <el-button v-if="hasPermission('user:create')" :icon="Upload" @click="importVisible = true">导入用户</el-button>
-          <el-button v-if="hasMenu(21) && hasPermission('user:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length === 0" @click="handleBatchDelete">批量删除</el-button>
+          <el-button v-if="hasPermission('user:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length === 0" @click="handleBatchDelete">批量删除</el-button>
         </div>
         <div class="toolbar-right">
           <span class="selected-tip" v-if="selectedIds.length > 0">已选择 <strong>{{ selectedIds.length }}</strong> 项</span>
         </div>
       </div>
-      <el-table :data="pagedData" v-loading="tableLoading" stripe style="width: 100%" @selection-change="handleSelectionChange">
+      <el-table :data="pagedData" v-loading="tableLoading" stripe style="width: 100%" @selection-change="handleSelectionChange" @sort-change="handleSortChange" :default-sort="{ prop: 'createTime', order: 'descending' }">
         <el-table-column type="selection" width="50" align="center" :selectable="(row) => !row.isSuperAdmin" />
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="username" label="用户名" width="110" />
-        <el-table-column prop="nickname" label="昵称" width="100" />
-        <el-table-column prop="email" label="邮箱" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="username" label="用户名" width="110" sortable />
+        <el-table-column prop="nickname" label="昵称" width="100" sortable />
+        <el-table-column prop="email" label="邮箱" min-width="160" show-overflow-tooltip sortable />
         <el-table-column label="角色" width="140" align="center">
           <template #default="{ row }">
             <div style="display:flex;flex-wrap:wrap;gap: 4px;justify-content:center;">
@@ -45,12 +45,12 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="75" align="center">
+        <el-table-column prop="status" label="状态" width="75" align="center" sortable>
           <template #default="{ row }">
             <el-switch v-model="row.status" :active-value="1" :inactive-value="0" :disabled="row.isSuperAdmin" @change="handleStatusToggle(row)" />
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="160" />
+        <el-table-column prop="createTime" label="创建时间" width="160" sortable />
         <el-table-column label="操作" width="150" align="center" fixed="right">
           <template #default="{ row }">
             <template v-if="row.isSuperAdmin">
@@ -58,7 +58,7 @@
             </template>
             <template v-else>
               <el-button v-if="hasPermission('user:edit')" type="primary" size="small" :icon="Edit" link @click="handleEdit(row)">编辑</el-button>
-              <el-popconfirm v-if="hasMenu(21) && hasPermission('user:delete')" title="确定删除该用户吗？" @confirm="handleDelete(row)">
+              <el-popconfirm v-if="hasPermission('user:delete')" title="确定删除该用户吗？" @confirm="handleDelete(row)">
                 <template #reference><el-button type="danger" size="small" :icon="Delete" link>删除</el-button></template>
               </el-popconfirm>
             </template>
@@ -150,7 +150,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Plus, Delete, Edit, Upload, UploadFilled } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
-import { hasPermission, hasMenu } from '../../stores/permissions.js'
+import { hasPermission } from '../../stores/permissions.js'
 
 const roleOptions = ref([])
 const deptOptions = ref([])
@@ -237,6 +237,10 @@ function handleSizeChange() { currentPage.value = 1 }
 
 const selectedIds = ref([])
 function handleSelectionChange(rows) { selectedIds.value = rows.map(r => r.id) }
+
+function handleSortChange(sort) {
+  // 交给 el-table 的 sortable 属性处理
+}
 
 async function handleStatusToggle(row) {
   if (row.isSuperAdmin) return

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import vesselems.annotation.OperateLog;
 import vesselems.common.ApiResponse;
 import vesselems.model.Permission;
 import vesselems.service.PermissionService;
@@ -36,16 +37,19 @@ public class PermissionController {
     }
 
     @PostMapping
+    @OperateLog(module = "权限管理", operation = "新增权限")
     public ApiResponse<Permission> create(@RequestBody Permission permission) {
         return ApiResponse.success(permissionService.createPermission(permission));
     }
 
     @PutMapping("/{id}")
+    @OperateLog(module = "权限管理", operation = "修改权限")
     public ApiResponse<Permission> update(@PathVariable Long id, @RequestBody Permission permission) {
         return ApiResponse.success(permissionService.updatePermission(id, permission));
     }
 
     @DeleteMapping("/{id}")
+    @OperateLog(module = "权限管理", operation = "删除权限")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         permissionService.deletePermission(id);
         return ApiResponse.success(null);

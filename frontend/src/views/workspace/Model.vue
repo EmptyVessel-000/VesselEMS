@@ -25,13 +25,13 @@
           <span class="selected-tip" v-if="selectedIds.length > 0">已选择 <strong>{{ selectedIds.length }}</strong> 项</span>
         </div>
       </div>
-      <el-table :data="pagedData" v-loading="loading" stripe style="width:100%" @selection-change="handleSelectionChange">
+      <el-table :data="pagedData" v-loading="loading" stripe style="width:100%" @selection-change="handleSelectionChange" @sort-change="handleSortChange" :default-sort="{ prop: 'createTime', order: 'descending' }">
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="name" label="模型名称" width="140" />
-        <el-table-column prop="apiUrl" label="API地址" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="modelId" label="模型标识" width="120" />
-        <el-table-column label="版本" width="90" align="center">
+        <el-table-column prop="name" label="模型名称" width="140" sortable />
+        <el-table-column prop="apiUrl" label="API地址" min-width="200" show-overflow-tooltip sortable />
+        <el-table-column prop="modelId" label="模型标识" width="120" sortable />
+        <el-table-column label="版本" width="90" align="center" sortable>
           <template #default="{ row }">
             <el-tag :type="row.version === 1 ? 'success' : ''" size="small">{{ row.version === 1 ? 'RAG' : 'NL2SQL' }}</el-tag>
           </template>
@@ -44,7 +44,7 @@
             <el-switch v-model="row.status" :active-value="1" :inactive-value="0" @change="handleToggle(row)" />
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="160">
+        <el-table-column label="创建时间" width="160" sortable>
           <template #default="{ row }">{{ row.createTime || '-' }}</template>
         </el-table-column>
         <el-table-column label="操作" width="160" align="center" fixed="right">
@@ -114,6 +114,9 @@ const pagedData = computed(() => {
   return filteredList.value.slice(s, s + size.value)
 })
 
+function handleSortChange(sort) {
+  // 交给 el-table 的 sortable 属性处理
+}
 function handleSearch() { page.value = 1 }
 function handleReset() { searchForm.keyword = ''; page.value = 1 }
 function handleSelectionChange(rows) { selectedIds.value = rows.map(r => r.id) }

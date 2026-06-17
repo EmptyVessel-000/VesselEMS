@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import vesselems.annotation.OperateLog;
 import vesselems.model.Menu;
 import vesselems.model.MenuPermission;
 import vesselems.model.Permission;
@@ -56,21 +57,25 @@ public class RoleController {
     }
 
     @PostMapping
+    @OperateLog(module = "角色管理", operation = "新增角色")
     public Role createRole(@RequestBody Role role) {
         return roleService.createRole(role);
     }
 
     @PutMapping("/{id}")
+    @OperateLog(module = "角色管理", operation = "修改角色")
     public Role updateRole(@PathVariable Long id, @RequestBody Role role) {
         return roleService.updateRole(id, role);
     }
 
     @DeleteMapping("/{id}")
+    @OperateLog(module = "角色管理", operation = "删除角色")
     public void deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
     }
 
     @PostMapping("/{id}/menus")
+    @OperateLog(module = "角色管理", operation = "分配菜单")
     public void assignMenus(@PathVariable Long id, @RequestBody List<Long> menuIds) {
         roleService.assignMenus(id, menuIds);
     }
@@ -81,6 +86,7 @@ public class RoleController {
     }
 
     @PostMapping("/{id}/permissions")
+    @OperateLog(module = "角色管理", operation = "分配权限")
     public void assignPermissions(@PathVariable Long id, @RequestBody List<Long> permIds) {
         roleService.assignPermissions(id, permIds);
     }
@@ -90,29 +96,22 @@ public class RoleController {
         return roleService.getRolePermissions(id);
     }
 
-    /**
-     * 获取按菜单分组的权限树，标记当前角色已分配的权限
-     */
     @GetMapping("/{id}/permissions/tree")
     public List<Map<String, Object>> getPermissionTree(@PathVariable Long id) {
-        // 获取当前角色已分配的权限ID集合
         List<PermissionRole> rolePerms = roleService.getRolePermissions(id);
         var assignedPermIds = rolePerms.stream()
                 .map(PermissionRole::getPermissionId)
                 .collect(Collectors.toSet());
 
-        // 获取所有菜单（只取页面类型，即 menuType=1）
         List<Menu> allMenus = menuRepository.findAll().stream()
                 .filter(m -> m.getMenuType() != null && m.getMenuType() == 1)
                 .collect(Collectors.toList());
 
-        // 构建菜单ID -> 菜单名映射
         Map<Long, String> menuNameMap = new HashMap<>();
         for (Menu m : allMenus) {
             menuNameMap.put(m.getId(), m.getMenuName());
         }
 
-        // 按菜单分组权限
         List<Map<String, Object>> result = new ArrayList<>();
         for (Menu menu : allMenus) {
             List<MenuPermission> mpList = menuPermissionRepository.findByMenuId(menu.getId());

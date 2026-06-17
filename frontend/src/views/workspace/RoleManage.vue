@@ -20,17 +20,17 @@
     <div class="table-section">
       <div class="toolbar">
         <div class="toolbar-left">
-          <el-button v-if="hasMenu(22) && hasPermission('role:create')" type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button>
-          <el-button v-if="hasMenu(22) && hasPermission('role:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button>
+          <el-button v-if="hasPermission('role:create')" type="primary" :icon="Plus" @click="handleAdd">新增角色</el-button>
+          <el-button v-if="hasPermission('role:delete')" type="danger" :icon="Delete" :disabled="selectedIds.length===0" @click="handleBatchDelete">批量删除</el-button>
         </div>
       </div>
-      <el-table :data="pagedData" v-loading="tableLoading" stripe style="width:100%" @selection-change="handleSelectionChange">
+      <el-table :data="pagedData" v-loading="tableLoading" stripe style="width:100%" @selection-change="handleSelectionChange" @sort-change="handleSortChange" :default-sort="{ prop: 'createTime', order: 'descending' }">
         <el-table-column type="selection" width="50" align="center" :selectable="(row) => !BUILT_IN_ROLES.includes(row.roleName)" />
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="roleName" label="角色标识" min-width="150" />
-        <el-table-column prop="description" label="角色描述" min-width="250" show-overflow-tooltip />
-        <el-table-column prop="sortOrder" label="排序" width="70" align="center" />
-        <el-table-column prop="createTime" label="创建时间" width="170" />
+        <el-table-column prop="roleName" label="角色标识" min-width="150" sortable />
+        <el-table-column prop="description" label="角色描述" min-width="250" show-overflow-tooltip sortable />
+        <el-table-column prop="sortOrder" label="排序" width="70" align="center" sortable />
+        <el-table-column prop="createTime" label="创建时间" width="170" sortable />
         <el-table-column prop="status" label="状态" width="75" align="center">
           <template #default="{ row }">
             <el-switch v-if="BUILT_IN_ROLES.includes(row.roleName)" :model-value="row.status" :active-value="1" :inactive-value="0" disabled />
@@ -102,9 +102,12 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Plus, Delete, Edit, Menu, Key, Folder } from '@element-plus/icons-vue'
 import request from '../../api/request.js'
-import { hasPermission, hasMenu, BUILT_IN_ROLES } from '../../stores/permissions.js'
+import { hasPermission, BUILT_IN_ROLES } from '../../stores/permissions.js'
 
 const allRoles = ref([]), tableLoading = ref(false)
+function handleSortChange(sort) {
+  // 交给 el-table 的 sortable 属性处理
+}
 
 async function fetchRoles() {
   tableLoading.value = true

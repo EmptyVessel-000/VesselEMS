@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import vesselems.annotation.OperateLog;
 import vesselems.common.ApiResponse;
 import vesselems.model.Department;
 import vesselems.service.DepartmentService;
@@ -45,16 +46,19 @@ public class DepartmentController {
     }
 
     @PostMapping
+    @OperateLog(module = "部门管理", operation = "新增部门")
     public ApiResponse<Department> create(@RequestBody Department department) {
         return ApiResponse.success(departmentService.createDepartment(department));
     }
 
     @PutMapping("/{id}")
+    @OperateLog(module = "部门管理", operation = "修改部门")
     public ApiResponse<Department> update(@PathVariable Long id, @RequestBody Department department) {
         return ApiResponse.success(departmentService.updateDepartment(id, department));
     }
 
     @DeleteMapping("/{id}")
+    @OperateLog(module = "部门管理", operation = "删除部门")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         departmentService.deleteDepartment(id);
         return ApiResponse.success(null);

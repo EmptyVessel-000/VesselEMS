@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import vesselems.annotation.OperateLog;
 import vesselems.common.ApiResponse;
 import vesselems.model.Menu;
 import vesselems.service.MenuService;
@@ -45,16 +46,19 @@ public class MenuController {
     }
 
     @PostMapping
+    @OperateLog(module = "菜单管理", operation = "新增菜单")
     public ApiResponse<Menu> create(@RequestBody Menu menu) {
         return ApiResponse.success(menuService.createMenu(menu));
     }
 
     @PutMapping("/{id}")
+    @OperateLog(module = "菜单管理", operation = "修改菜单")
     public ApiResponse<Menu> update(@PathVariable Long id, @RequestBody Menu menu) {
         return ApiResponse.success(menuService.updateMenu(id, menu));
     }
 
     @DeleteMapping("/{id}")
+    @OperateLog(module = "菜单管理", operation = "删除菜单")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         menuService.deleteMenu(id);
         return ApiResponse.success(null);
@@ -66,6 +70,7 @@ public class MenuController {
     }
 
     @PostMapping("/{id}/move")
+    @OperateLog(module = "菜单管理", operation = "移动菜单排序")
     public ApiResponse<Void> move(@PathVariable Long id, @RequestParam String direction) {
         menuService.moveMenu(id, direction);
         return ApiResponse.success(null);
